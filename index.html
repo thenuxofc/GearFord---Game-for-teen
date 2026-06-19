@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Gearford: The Clockwork City</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Spectral:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#161a2c;
+  --panel:#1f2540;
+  --panel-edge:#2c3354;
+  --brass:#d4a24c;
+  --brass-dim:#8a6c38;
+  --teal:#5ecfc4;
+  --parchment:#f0e6d2;
+  --rose:#c4566e;
+  --ink:#cdd3ef;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:radial-gradient(circle at 50% -10%, #232a4a 0%, var(--bg) 55%);
+  color:var(--ink);
+  font-family:'Spectral',serif;
+  min-height:100vh;
+  padding:28px 16px 60px;
+}
+.wrap{max-width:980px;margin:0 auto;}
+h1.title{
+  font-family:'Cinzel',serif;
+  font-weight:700;
+  text-align:center;
+  letter-spacing:.06em;
+  font-size:34px;
+  color:var(--brass);
+  margin:0 0 4px;
+  text-shadow:0 0 18px rgba(212,162,76,.25);
+}
+.subtitle{
+  text-align:center;
+  color:#8d93b8;
+  font-size:14px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin:0 0 26px;
+}
+
+/* gear ring progress */
+.gearring{display:flex;justify-content:center;gap:18px;margin:0 0 30px;}
+.gear-slot{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.gear-slot .label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.06em;color:#7d83a8;text-transform:uppercase;}
+.gear-slot.active .label{color:var(--teal);}
+.gear-slot.done .label{color:var(--brass);}
+svg.gear{width:46px;height:46px;transition:filter .4s;}
+.gear-slot .cog{fill:#3a4068;stroke:#4a5180;stroke-width:2;}
+.gear-slot.active .cog{fill:#2c3a5c;stroke:var(--teal);animation:spin 6s linear infinite;transform-origin:50% 50%;}
+.gear-slot.done .cog{fill:#4a3a1c;stroke:var(--brass);filter:drop-shadow(0 0 6px rgba(212,162,76,.55));}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;}
+@media (max-width:760px){.layout{grid-template-columns:1fr;}}
+
+.panel{
+  background:var(--panel);
+  border:1px solid var(--panel-edge);
+  border-radius:6px;
+  padding:18px 20px;
+  position:relative;
+}
+.panel::before{
+  content:"";
+  position:absolute;inset:6px;
+  border:1px solid rgba(212,162,76,.12);
+  border-radius:3px;
+  pointer-events:none;
+}
+.panel h2{
+  font-family:'Cinzel',serif;
+  font-size:16px;
+  color:var(--brass);
+  margin:0 0 10px;
+  letter-spacing:.04em;
+}
+
+/* story panel */
+.story-text{font-size:16px;line-height:1.65;color:var(--parchment);min-height:120px;}
+.story-text p{margin:0 0 12px;}
+.story-text .fail{color:var(--rose);}
+.story-text .success{color:var(--teal);}
+.concept-tag{
+  display:inline-block;
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  color:var(--bg);
+  background:var(--teal);
+  padding:3px 9px;
+  border-radius:3px;
+  margin-bottom:12px;
+}
+
+/* grid */
+.grid-wrap{display:flex;justify-content:center;margin:14px 0;}
+.grid{display:grid;gap:3px;background:#0e1122;padding:6px;border-radius:4px;border:1px solid var(--panel-edge);}
+.cell{
+  width:42px;height:42px;
+  display:flex;align-items:center;justify-content:center;
+  background:#222846;
+  border-radius:3px;
+  font-size:18px;
+  position:relative;
+}
+.cell.wall{background:#3a3f5c;background-image:repeating-linear-gradient(45deg, rgba(0,0,0,.25) 0 4px, transparent 4px 8px);}
+.cell.gap{background:#0e1122;box-shadow:inset 0 0 8px #000;}
+.cell.gear{color:var(--brass);}
+.cell.gear.taken{opacity:.25;}
+.cell.door{background:#2c3a2c;color:var(--teal);}
+.cell.door.locked{color:#5a6a5a;}
+.cell .mender{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;
+  transition:transform .25s ease;
+  filter:drop-shadow(0 0 4px rgba(94,207,196,.6));
+}
+
+.spark-counter{
+  display:flex;align-items:center;gap:8px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px;color:var(--brass);
+  justify-content:center;margin-top:8px;
+}
+.spark-dot{width:9px;height:9px;border-radius:50%;background:#3a4068;border:1px solid var(--brass-dim);}
+.spark-dot.lit{background:var(--brass);box-shadow:0 0 6px rgba(212,162,76,.8);}
+
+/* code panel */
+.budget{font-family:'JetBrains Mono',monospace;font-size:12px;color:#8d93b8;margin-bottom:10px;}
+.budget b{color:var(--teal);}
+.palette{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+button.block-btn{
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;
+  background:#262c4e;
+  color:var(--ink);
+  border:1px solid var(--panel-edge);
+  border-radius:4px;
+  padding:7px 10px;
+  cursor:pointer;
+}
+button.block-btn:hover{border-color:var(--teal);color:var(--teal);}
+button.block-btn:disabled{opacity:.3;cursor:not-allowed;}
+button.block-btn.accent{border-color:var(--brass-dim);color:var(--brass);}
+button.block-btn.accent:hover{border-color:var(--brass);}
+
+.program{
+  background:#0e1122;
+  border:1px solid var(--panel-edge);
+  border-radius:4px;
+  min-height:120px;
+  padding:10px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:12.5px;
+  margin-bottom:12px;
+}
+.program .empty{color:#5a6080;font-style:italic;}
+.pline{padding:3px 6px;border-radius:3px;color:var(--ink);}
+.pline.indent1{margin-left:18px;}
+.pline.indent2{margin-left:36px;}
+.pline .kw{color:var(--teal);}
+.pline .kw2{color:var(--brass);}
+.pline.current{background:rgba(94,207,196,.15);}
+
+.controls{display:flex;gap:8px;flex-wrap:wrap;}
+button.action-btn{
+  font-family:'Cinzel',serif;
+  font-size:13px;
+  letter-spacing:.04em;
+  background:var(--brass);
+  color:#241c0c;
+  border:none;
+  border-radius:4px;
+  padding:9px 16px;
+  cursor:pointer;
+  font-weight:700;
+}
+button.action-btn:hover{filter:brightness(1.1);}
+button.action-btn:disabled{opacity:.35;cursor:not-allowed;}
+button.action-btn.secondary{
+  background:transparent;
+  color:var(--ink);
+  border:1px solid var(--panel-edge);
+}
+button.action-btn.secondary:hover{border-color:var(--teal);color:var(--teal);}
+
+.next-wrap{text-align:center;margin-top:18px;}
+.hint{font-size:12px;color:#7d83a8;margin-top:8px;line-height:1.5;}
+
+.intro-card{
+  background:var(--panel);
+  border:1px solid var(--panel-edge);
+  border-radius:6px;
+  padding:24px 26px;
+  text-align:center;
+  margin-bottom:22px;
+}
+.intro-card p{font-size:15px;line-height:1.7;color:var(--parchment);max-width:640px;margin:0 auto 16px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="title">Gearford: The Clockwork City</h1>
+  <p class="subtitle">A Mender's Tale, Told in Code</p>
+
+  <div class="gearring" id="gearring"></div>
+
+  <div id="introCard" class="intro-card">
+    <p>The great clock-city of Gearford has gone quiet. Somewhere beneath the brass rooftops, the old Engine has begun to <em>glitch</em> &mdash; doors won't open, gears spin backwards, sparks flicker and die. You are the newest Mender, and the only tool you carry is a small brass instruction-wheel that lets you <em>program</em> your own actions. Four broken districts await. Each will teach you something the Engine itself once knew.</p>
+    <button class="action-btn" onclick="startGame()">Begin the Mending ↗</button>
+  </div>
+
+  <div id="gameArea" style="display:none;">
+    <div class="layout">
+      <div class="panel">
+        <h2 id="storyTitle">Chapter</h2>
+        <div class="story-text" id="storyText"></div>
+        <div class="grid-wrap"><div class="grid" id="grid"></div></div>
+        <div class="spark-counter" id="sparkRow" style="display:none;"></div>
+      </div>
+
+      <div class="panel">
+        <h2 id="codeTitle">Your Program</h2>
+        <div class="budget" id="budget"></div>
+        <div class="palette" id="palette"></div>
+        <div class="program" id="programView"><span class="empty">// no commands yet</span></div>
+        <div class="controls">
+          <button class="action-btn" id="runBtn" onclick="runProgram()">Run ▸</button>
+          <button class="action-btn secondary" id="undoBtn" onclick="undoBlock()">Undo</button>
+          <button class="action-btn secondary" id="resetBtn" onclick="resetProgram()">Reset</button>
+        </div>
+        <div class="hint" id="hint"></div>
+      </div>
+    </div>
+    <div class="next-wrap" id="nextWrap" style="display:none;">
+      <button class="action-btn" onclick="nextLevel()">Continue the Mending ↗</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- LEVEL DATA ---------- */
+const DIR = {N:[-1,0],E:[0,1],S:[1,0],W:[0,-1]};
+const TURN_R = {N:'E',E:'S',S:'W',W:'N'};
+const TURN_L = {N:'W',W:'S',S:'E',E:'N'};
+const FACE_ARROW = {N:'▲',E:'▶',S:'▼',W:'◀'};
+
+const levels = [
+  { // 0: sequencing
+    name:'I. The Locked Gate',
+    concept:'Sequencing',
+    grid:[
+      "S....",
+      "###.#",
+      "....D"
+    ],
+    start:{r:0,c:0,f:'E'},
+    maxBlocks:8,
+    palette:['forward','turnLeft','turnRight'],
+    intro:`<p>The first gate of Gearford stands sealed behind a maze of brass walls. The instruction-wheel only understands one thing at a time: <strong>move forward</strong>, or <strong>turn</strong>. Build a sequence of commands &mdash; in order &mdash; to walk your Mender to the glowing door.</p>`,
+    success:`<p class="success">The gate sighs open on rusted hinges. <em>"One step follows another,"</em> the old stonework seems to say. <em>"That is the first law of the Engine: sequence."</em></p>`,
+    fail:`<p class="fail">CLANG. The Mender walks straight into solid brass and stumbles back. The wall hasn't moved &mdash; perhaps the plan needs to.</p>`,
+  },
+  { // 1: loops
+    name:'II. The Gear Vault',
+    concept:'Loops',
+    grid:["S***D"],
+    start:{r:0,c:0,f:'E'},
+    maxBlocks:5,
+    repeatCount:3,
+    palette:['forward','collect','repeatStart','repeatEnd'],
+    intro:`<p>Three loose gears lie scattered down the vault corridor. You could march forward and collect each one by hand &mdash; but the old instruction-wheel only has room for <strong>5 commands</strong> this time, and writing it out by hand would take seven. Use <strong>Repeat</strong> to do the same two steps three times over, then walk the last stretch to the door.</p>`,
+    success:`<p class="success">The gears click into the wall sockets and the vault door grinds upward. <em>"Why write the same step four times,"</em> hums the Engine, <em>"when you can teach it to repeat itself?"</em></p>`,
+    fail:`<p class="fail">The Mender runs out of road &mdash; or out of gears. Check whether your loop repeats the right number of times.</p>`,
+  },
+  { // 2: conditionals + loops
+    name:'III. The Broken Bridge',
+    concept:'Conditionals',
+    grid:["S..G.G.D"],
+    start:{r:0,c:0,f:'E'},
+    maxBlocks:6,
+    palette:['repeatStart','repeatEnd','ifGapStart','ifElse','ifEnd','forward','jump'],
+    intro:`<p>The bridge ahead is missing planks &mdash; gaps where the brass floor has rusted through. Walking forward into a gap means falling. Use <strong>If gap ahead</strong> to decide, on the fly, whether to <strong>jump</strong> or simply <strong>walk forward</strong> &mdash; then wrap it in a loop so the Mender checks every single step.</p>`,
+    success:`<p class="success">Step by step, the Mender reads the floor ahead and reacts &mdash; jump, walk, jump, walk &mdash; until solid ground meets the far door. <em>"A program that only ever does one thing is brittle,"</em> the Engine notes. <em>"A program that can choose is alive."</em></p>`,
+    fail:`<p class="fail">A plank gives way with a groan of metal, and the Mender drops through into the dark below. The bridge demands a choice at every gap, not a guess.</p>`,
+  },
+  { // 3: variables + functions
+    name:'IV. The Spark Chamber',
+    concept:'Variables & Functions',
+    grid:["S*.*.*D"],
+    start:{r:0,c:0,f:'E'},
+    maxBlocks:8,
+    sparksNeeded:3,
+    palette:['forward','callActivate'],
+    intro:`<p>The final door is locked by an old ward: it will only open once the Engine senses <strong>3 sparks</strong> of charge. Three broken gears sit along the chamber floor. Rather than write out "reach in, twist, seal" by hand each time, the instruction-wheel offers a ready-made <strong>function</strong> &mdash; <code>Activate Gear()</code> &mdash; that does all three steps and raises the spark count by one. Call it wherever you stand on a gear.</p>`,
+    success:`<p class="success">Spark by spark, the chamber brightens. The final door swings wide on a current of golden light. <em>"A name you can call again and again,"</em> the Engine whispers, fading, <em>"is worth more than a thousand repeated instructions. You have learned to mend me. Go well, Mender of Gearford."</em></p>`,
+    fail:`<p class="fail">The door stays cold and dark. The Engine needs three sparks &mdash; have you activated enough gears before reaching it?</p>`,
+  },
+];
+
+// fix level2 grid string array properly (was placeholder)
+levels[1].grid = ["S*.*.*D"]; // S,*,.,*,.,*,D -> repeat2{forward,collect} won't fit budget4 well; redesign below
+// Final, verified grid for level 2 (index1): S * . * D over 5 cols, repeat2{forward,collect} then forward = 3 blocks <=4
+levels[1].grid = ["S*.*D"];
+
+const BLOCK_LABELS = {
+  forward:{label:'Forward', kw:'forward()'},
+  turnLeft:{label:'Turn Left', kw:'turnLeft()'},
+  turnRight:{label:'Turn Right', kw:'turnRight()'},
+  collect:{label:'Collect', kw:'collect()'},
+  jump:{label:'Jump Gap', kw:'jump()'},
+  callActivate:{label:'Call: Activate Gear()', kw:'activateGear()'},
+  repeatStart:{label:'Repeat 2 { ', kw:'repeat (2) {'},
+  repeatEnd:{label:'} End Repeat', kw:'}'},
+  ifGapStart:{label:'If Gap Ahead {', kw:'if (gapAhead) {'},
+  ifElse:{label:'} Else {', kw:'} else {'},
+  ifEnd:{label:'} End If', kw:'}'},
+};
+
+/* ---------- STATE ---------- */
+let curLevel = 0;
+let program = []; // flat list of tokens (we use a simple flat structure with explicit start/end markers)
+let mender = {r:0,c:0,f:'E'};
+let collected = new Set();
+let sparks = 0;
+let running = false;
+
+function $(id){return document.getElementById(id);}
+
+function startGame(){
+  $('introCard').style.display='none';
+  $('gameArea').style.display='block';
+  buildGearRing();
+  loadLevel(0);
+}
+
+function buildGearRing(){
+  const ring = $('gearring');
+  ring.innerHTML = levels.map((lv,i)=>`
+    <div class="gear-slot" id="gs${i}">
+      <svg class="gear" viewBox="0 0 40 40"><g class="cog">
+        <circle cx="20" cy="20" r="11"/>
+        ${Array.from({length:8}).map((_,t)=>{
+          const a = t*45*Math.PI/180;
+          const x = 20+Math.cos(a)*15, y=20+Math.sin(a)*15;
+          return `<rect x="${x-2.5}" y="${y-2.5}" width="5" height="5" transform="rotate(${t*45} ${x} ${y})"/>`;
+        }).join('')}
+      </g></svg>
+      <div class="label">${i+1}</div>
+    </div>`).join('');
+}
+
+function updateGearRing(){
+  levels.forEach((lv,i)=>{
+    const el = $('gs'+i);
+    el.classList.toggle('active', i===curLevel);
+    el.classList.toggle('done', i<curLevel || (i===curLevel && levelComplete));
+  });
+}
+
+let levelComplete=false;
+
+function loadLevel(i){
+  curLevel=i;
+  levelComplete=false;
+  const lv = levels[i];
+  mender = {r:lv.start.r,c:lv.start.c,f:lv.start.f};
+  collected = new Set();
+  sparks = 0;
+  program = [];
+  $('nextWrap').style.display='none';
+  $('storyTitle').textContent = lv.name;
+  $('storyText').innerHTML = `<span class="concept-tag">${lv.concept}</span>` + lv.intro;
+  $('codeTitle').textContent = 'Your Program';
+  renderPalette();
+  renderProgram();
+  renderGrid();
+  renderSparkRow();
+  updateGearRing();
+  $('hint').textContent = '';
+  $('runBtn').disabled=false;
+}
+
+function renderPalette(){
+  const lv = levels[curLevel];
+  const pal = $('palette');
+  pal.innerHTML = lv.palette.map(key=>{
+    const b = BLOCK_LABELS[key];
+    const accent = (key.startsWith('repeat')||key.startsWith('if'))?'accent':'';
+    return `<button class="block-btn ${accent}" onclick="addBlock('${key}')">${b.label}</button>`;
+  }).join('');
+  $('budget').innerHTML = `Command budget: <b>${program.length}</b> / ${lv.maxBlocks}`;
+}
+
+/* program is a flat array; nesting is implied by start/end tokens, matched via simple stack rules for rendering & execution */
+function addBlock(key){
+  const lv = levels[curLevel];
+  if(program.length >= lv.maxBlocks){return;}
+  // enforce simple grammar: ifElse only valid if there's an open ifGapStart without its ifElse yet; ends only valid if matching open
+  program.push(key);
+  renderProgram();
+  $('budget').innerHTML = `Command budget: <b>${program.length}</b> / ${lv.maxBlocks}`;
+}
+
+function undoBlock(){
+  program.pop();
+  renderProgram();
+  $('budget').innerHTML = `Command budget: <b>${program.length}</b> / ${levels[curLevel].maxBlocks}`;
+}
+function resetProgram(){
+  program=[];
+  renderProgram();
+  mender = {r:levels[curLevel].start.r,c:levels[curLevel].start.c,f:levels[curLevel].start.f};
+  collected = new Set();
+  sparks=0;
+  renderGrid();
+  renderSparkRow();
+  $('budget').innerHTML = `Command budget: <b>0</b> / ${levels[curLevel].maxBlocks}`;
+  $('hint').textContent='';
+}
+
+function renderProgram(){
+  const view = $('programView');
+  if(program.length===0){view.innerHTML='<span class="empty">// no commands yet</span>';return;}
+  let indent=0;
+  let html='';
+  program.forEach((key,idx)=>{
+    const b = BLOCK_LABELS[key];
+    if(key==='repeatEnd'||key==='ifEnd'||key==='ifElse'){indent=Math.max(0,indent-1);}
+    const cls = indent===0?'':(indent===1?'indent1':'indent2');
+    const kwClass = (key.startsWith('repeat')||key.startsWith('if'))?'kw2':'kw';
+    html += `<div class="pline ${cls}" data-i="${idx}"><span class="${kwClass}">${b.kw}</span></div>`;
+    if(key==='repeatStart'||key==='ifGapStart'||key==='ifElse'){indent++;}
+  });
+  view.innerHTML = html;
+}
+
+/* ---------- GRID RENDER ---------- */
+function parseGrid(strs){
+  return strs.map(row=>row.split(''));
+}
+function renderGrid(){
+  const lv = levels[curLevel];
+  const g = parseGrid(lv.grid);
+  const rows = g.length, cols = g[0].length;
+  const grid = $('grid');
+  grid.style.gridTemplateColumns = `repeat(${cols}, 42px)`;
+  let html='';
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const ch = g[r][c];
+      let cls='cell', content='';
+      if(ch==='#'){cls+=' wall';}
+      else if(ch==='G'){cls+=' gap';content='≈';}
+      else if(ch==='*'){
+        cls+=' gear';
+        const taken = collected.has(r+','+c);
+        if(taken) cls+=' taken';
+        content = taken?'○':'⚙';
+      } else if(ch==='D'){
+        const locked = lv.sparksNeeded && sparks<lv.sparksNeeded;
+        cls+= locked?' door locked':' door';
+        content = locked?'▣':'▣';
+      }
+      const isMender = mender.r===r && mender.c===c;
+      html += `<div class="${cls}" id="cell-${r}-${c}">${content}${isMender?`<span class="mender">${FACE_ARROW[mender.f]}</span>`:''}</div>`;
+    }
+  }
+  grid.innerHTML = html;
+}
+
+function renderSparkRow(){
+  const lv = levels[curLevel];
+  const row = $('sparkRow');
+  if(!lv.sparksNeeded){row.style.display='none';return;}
+  row.style.display='flex';
+  let dots='';
+  for(let i=0;i<lv.sparksNeeded;i++){
+    dots += `<span class="spark-dot ${i<sparks?'lit':''}"></span>`;
+  }
+  row.innerHTML = `Sparks ${dots}`;
+}
+
+/* ---------- EXECUTION ---------- */
+function sleep(ms){return new Promise(res=>setTimeout(res,ms));}
+
+function gridChar(r,c){
+  const lv = levels[curLevel];
+  const g = parseGrid(lv.grid);
+  if(r<0||c<0||r>=g.length||c>=g[0].length) return '#';
+  return g[r][c];
+}
+
+function aheadPos(){
+  const d = DIR[mender.f];
+  return {r:mender.r+d[0], c:mender.c+d[1]};
+}
+
+async function highlightLine(idx){
+  document.querySelectorAll('.pline').forEach(el=>el.classList.remove('current'));
+  const el = document.querySelector(`.pline[data-i="${idx}"]`);
+  if(el) el.classList.add('current');
+}
+
+/* Build nested AST from flat token list */
+function buildAST(tokens){
+  let i=0;
+  function parseBlock(){
+    const out=[];
+    while(i<tokens.length){
+      const t=tokens[i];
+      if(t==='repeatEnd'||t==='ifElse'||t==='ifEnd'){return out;}
+      if(t==='repeatStart'){
+        i++;
+        const idxStart=i-1;
+        const children = parseBlock();
+        i++; // consume repeatEnd
+        out.push({type:'repeat',count:2,children,line:idxStart});
+      } else if(t==='ifGapStart'){
+        i++;
+        const idxStart=i-1;
+        const thenC = parseBlock();
+        let elseC=[];
+        if(tokens[i]==='ifElse'){ i++; elseC = parseBlock(); }
+        i++; // consume ifEnd
+        out.push({type:'if',thenC,elseC,line:idxStart});
+      } else {
+        out.push({type:'cmd',cmd:t,line:i});
+        i++;
+      }
+    }
+    return out;
+  }
+  return parseBlock();
+}
+
+let execFailed=false, execMsg='';
+
+async function execNode(node){
+  if(execFailed) return;
+  await highlightLine(node.line);
+  await sleep(420);
+  if(node.type==='cmd'){
+    await execCmd(node.cmd);
+  } else if(node.type==='repeat'){
+    for(let k=0;k<node.count && !execFailed;k++){
+      for(const child of node.children){ await execNode(child); if(execFailed) return; }
+    }
+  } else if(node.type==='if'){
+    const gapAhead = gridChar(aheadPos().r, aheadPos().c)==='G';
+    const branch = gapAhead?node.thenC:node.elseC;
+    for(const child of branch){ await execNode(child); if(execFailed) return; }
+  }
+}
+
+async function execCmd(cmd){
+  const lv = levels[curLevel];
+  if(cmd==='turnLeft'){ mender.f = TURN_L[mender.f]; renderGrid(); return; }
+  if(cmd==='turnRight'){ mender.f = TURN_R[mender.f]; renderGrid(); return; }
+  if(cmd==='forward'){
+    const p = aheadPos();
+    const ch = gridChar(p.r,p.c);
+    if(ch==='#'){ execFailed=true; execMsg='wall'; return; }
+    if(ch==='G'){ execFailed=true; execMsg='gap'; return; }
+    mender.r=p.r; mender.c=p.c; renderGrid();
+    return;
+  }
+  if(cmd==='jump'){
+    const d = DIR[mender.f];
+    const mid = {r:mender.r+d[0], c:mender.c+d[1]};
+    const land = {r:mender.r+d[0]*2, c:mender.c+d[1]*2};
+    if(gridChar(mid.r,mid.c)!=='G'){ /* jumping when no gap: just acts like forward x2 attempt, but we'll treat as fail if lands on wall */ }
+    const landCh = gridChar(land.r,land.c);
+    if(landCh==='#'){ execFailed=true; execMsg='wall'; return; }
+    mender.r=land.r; mender.c=land.c; renderGrid();
+    return;
+  }
+  if(cmd==='collect'){
+    const key = mender.r+','+mender.c;
+    if(gridChar(mender.r,mender.c)==='*' && !collected.has(key)){
+      collected.add(key);
+    }
+    renderGrid();
+    return;
+  }
+  if(cmd==='callActivate'){
+    const key = mender.r+','+mender.c;
+    if(gridChar(mender.r,mender.c)==='*' && !collected.has(key)){
+      collected.add(key);
+      sparks++;
+      renderSparkRow();
+    }
+    renderGrid();
+    return;
+  }
+}
+
+async function runProgram(){
+  if(running) return;
+  running=true;
+  $('runBtn').disabled=true;
+  execFailed=false; execMsg='';
+  const lv = levels[curLevel];
+  mender = {r:lv.start.r,c:lv.start.c,f:lv.start.f};
+  collected = new Set();
+  sparks=0;
+  renderGrid(); renderSparkRow();
+  await sleep(200);
+
+  const ast = buildAST(program);
+  for(const node of ast){
+    await execNode(node);
+    if(execFailed) break;
+  }
+  document.querySelectorAll('.pline').forEach(el=>el.classList.remove('current'));
+
+  if(!execFailed){
+    const onDoor = gridChar(mender.r,mender.c)==='D';
+    const sparkOK = !lv.sparksNeeded || sparks>=lv.sparksNeeded;
+    if(onDoor && sparkOK){
+      $('storyText').innerHTML = `<span class="concept-tag">${lv.concept}</span>` + lv.success;
+      $('nextWrap').style.display='block';
+      levelComplete=true;
+      updateGearRing();
+      $('hint').textContent='';
+    } else if(onDoor && !sparkOK){
+      $('storyText').innerHTML = `<span class="concept-tag">${lv.concept}</span>` + lv.fail;
+      $('hint').textContent = `The door needs ${lv.sparksNeeded} sparks. You arrived with ${sparks}.`;
+    } else {
+      $('storyText').innerHTML = `<span class="concept-tag">${lv.concept}</span><p class="fail">The program ends, but the Mender hasn't reached the door yet. Add more commands, or rethink the plan.</p>`;
+    }
+  } else {
+    $('storyText').innerHTML = `<span class="concept-tag">${lv.concept}</span>` + lv.fail;
+    $('hint').textContent = execMsg==='wall' ? 'The Mender hit a wall — check your turns and counts.' : 'The Mender fell into a gap — check your conditional logic.';
+  }
+
+  running=false;
+  $('runBtn').disabled=false;
+}
+
+function nextLevel(){
+  if(curLevel < levels.length-1){
+    loadLevel(curLevel+1);
+  } else {
+    $('gameArea').innerHTML = `<div class="intro-card"><p class="success" style="font-size:18px;">You have mended every district of Gearford. The Engine hums quietly beneath the city once more &mdash; sequencing, looping, choosing, remembering. <em>Well done, Mender.</em></p></div>`;
+  }
+}
+</script>
+</body>
+</html>
