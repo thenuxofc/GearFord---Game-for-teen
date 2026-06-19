@@ -2,659 +2,1767 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Gearford: The Clockwork City</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ROOTCODE — Game Design Document</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Spectral:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* ============ TOKENS ============ */
 :root{
-  --bg:#161a2c;
-  --panel:#1f2540;
-  --panel-edge:#2c3354;
-  --brass:#d4a24c;
-  --brass-dim:#8a6c38;
-  --teal:#5ecfc4;
-  --parchment:#f0e6d2;
-  --rose:#c4566e;
-  --ink:#cdd3ef;
+  --ink:#0a0e0d;
+  --ink-soft:#0d1614;
+  --panel:#101c18;
+  --panel-2:#0c1614;
+  --line:rgba(237,243,238,.09);
+  --line-bright:rgba(237,243,238,.18);
+  --text:#edf3ee;
+  --text-dim:#92a89c;
+  --text-faint:#5c7468;
+
+  --act1:#4dffc8;  --act1-dim:rgba(77,255,200,.13);
+  --act2:#b98cff;  --act2-dim:rgba(185,140,255,.13);
+  --act3:#5ee7ff;  --act3b:#ff4fa3; --act3-dim:rgba(94,231,255,.13);
+  --act4:#ff5c5c;  --act4b:#ffb454; --act4-dim:rgba(255,92,92,.13);
+  --act5:#ffd27a;  --act5-dim:rgba(255,210,122,.13);
+
+  --accent:var(--act1);
+  --accent-dim:var(--act1-dim);
+
+  --font-d:'Space Grotesk',sans-serif;
+  --font-b:'Inter',sans-serif;
+  --font-m:'JetBrains Mono',monospace;
+
+  --nav-w:248px;
+  --maxw:980px;
 }
 *{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto;}
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
+}
 body{
   margin:0;
-  background:radial-gradient(circle at 50% -10%, #232a4a 0%, var(--bg) 55%);
-  color:var(--ink);
-  font-family:'Spectral',serif;
-  min-height:100vh;
-  padding:28px 16px 60px;
-}
-.wrap{max-width:980px;margin:0 auto;}
-h1.title{
-  font-family:'Cinzel',serif;
-  font-weight:700;
-  text-align:center;
-  letter-spacing:.06em;
-  font-size:34px;
-  color:var(--brass);
-  margin:0 0 4px;
-  text-shadow:0 0 18px rgba(212,162,76,.25);
-}
-.subtitle{
-  text-align:center;
-  color:#8d93b8;
-  font-size:14px;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  margin:0 0 26px;
-}
-
-/* gear ring progress */
-.gearring{display:flex;justify-content:center;gap:18px;margin:0 0 30px;}
-.gear-slot{display:flex;flex-direction:column;align-items:center;gap:6px;}
-.gear-slot .label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.06em;color:#7d83a8;text-transform:uppercase;}
-.gear-slot.active .label{color:var(--teal);}
-.gear-slot.done .label{color:var(--brass);}
-svg.gear{width:46px;height:46px;transition:filter .4s;}
-.gear-slot .cog{fill:#3a4068;stroke:#4a5180;stroke-width:2;}
-.gear-slot.active .cog{fill:#2c3a5c;stroke:var(--teal);animation:spin 6s linear infinite;transform-origin:50% 50%;}
-.gear-slot.done .cog{fill:#4a3a1c;stroke:var(--brass);filter:drop-shadow(0 0 6px rgba(212,162,76,.55));}
-@keyframes spin{to{transform:rotate(360deg);}}
-
-.layout{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;}
-@media (max-width:760px){.layout{grid-template-columns:1fr;}}
-
-.panel{
-  background:var(--panel);
-  border:1px solid var(--panel-edge);
-  border-radius:6px;
-  padding:18px 20px;
-  position:relative;
-}
-.panel::before{
-  content:"";
-  position:absolute;inset:6px;
-  border:1px solid rgba(212,162,76,.12);
-  border-radius:3px;
-  pointer-events:none;
-}
-.panel h2{
-  font-family:'Cinzel',serif;
+  background:var(--ink);
+  color:var(--text);
+  font-family:var(--font-b);
   font-size:16px;
-  color:var(--brass);
-  margin:0 0 10px;
-  letter-spacing:.04em;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 900px 600px at 12% 0%, rgba(77,255,200,.06), transparent 60%),
+    radial-gradient(ellipse 900px 700px at 88% 30%, rgba(185,140,255,.05), transparent 60%),
+    radial-gradient(ellipse 1000px 700px at 50% 80%, rgba(255,92,92,.04), transparent 60%);
+  pointer-events:none;
+  z-index:0;
+}
+a{color:inherit;}
+h1,h2,h3,h4{font-family:var(--font-d);margin:0;letter-spacing:-0.01em;}
+p{margin:0 0 14px;color:var(--text-dim);}
+.mono{font-family:var(--font-m);}
+::selection{background:var(--accent);color:#06110d;}
+::-webkit-scrollbar{width:9px;}
+::-webkit-scrollbar-track{background:var(--ink);}
+::-webkit-scrollbar-thumb{background:var(--line-bright);border-radius:8px;}
+
+/* focus visibility */
+a:focus-visible, button:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:3px;
+  border-radius:3px;
 }
 
-/* story panel */
-.story-text{font-size:16px;line-height:1.65;color:var(--parchment);min-height:120px;}
-.story-text p{margin:0 0 12px;}
-.story-text .fail{color:var(--rose);}
-.story-text .success{color:var(--teal);}
-.concept-tag{
-  display:inline-block;
-  font-family:'JetBrains Mono',monospace;
-  font-size:11px;
-  letter-spacing:.05em;
+/* ============ LAYOUT SHELL ============ */
+.shell{
+  display:flex;
+  max-width:1440px;
+  margin:0 auto;
+  position:relative;
+  z-index:1;
+}
+main{
+  flex:1;
+  min-width:0;
+  padding:0 28px 120px;
+}
+.content-col{max-width:var(--maxw);margin:0 auto;}
+
+/* ============ DESKTOP ROOT-PATH NAV ============ */
+#rootnav{
+  width:var(--nav-w);
+  flex-shrink:0;
+  position:sticky;
+  top:0;
+  height:100vh;
+  padding:30px 8px 30px 18px;
+  display:flex;
+  gap:10px;
+}
+.nav-spine{width:26px;flex-shrink:0;position:relative;}
+.nav-spine svg{width:100%;height:100%;overflow:visible;}
+#spinePath{fill:none;stroke:var(--line-bright);stroke-width:1.6;}
+#travelDot{
+  filter:drop-shadow(0 0 6px var(--accent)) drop-shadow(0 0 14px var(--accent));
+  transition:fill .4s ease;
+}
+.nav-list{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;}
+.nav-act{margin-bottom:2px;}
+.nav-act-label{
+  font-family:var(--font-m);
+  font-size:9.5px;
+  letter-spacing:.14em;
   text-transform:uppercase;
-  color:var(--bg);
-  background:var(--teal);
-  padding:3px 9px;
-  border-radius:3px;
-  margin-bottom:12px;
+  color:var(--text-faint);
+  padding:7px 0 4px;
 }
+.nav-link{
+  display:block;
+  font-size:12.3px;
+  line-height:1;
+  color:var(--text-dim);
+  text-decoration:none;
+  padding:6px 0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  border-left:2px solid transparent;
+  padding-left:9px;
+  margin-left:-1px;
+  transition:color .2s ease, border-color .2s ease;
+}
+.nav-link b{
+  font-family:var(--font-m);
+  font-weight:500;
+  margin-right:6px;
+  color:var(--text-faint);
+}
+.nav-link.active{color:var(--text);border-left-color:var(--accent);}
+.nav-link.active b{color:var(--accent);}
+.nav-link:hover{color:var(--text);}
+.nav-brand{
+  font-family:var(--font-d);
+  font-size:13px;
+  letter-spacing:.06em;
+  color:var(--text);
+  margin-bottom:14px;
+  display:flex;align-items:center;gap:7px;
+}
+.nav-brand .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
 
-/* grid */
-.grid-wrap{display:flex;justify-content:center;margin:14px 0;}
-.grid{display:grid;gap:3px;background:#0e1122;padding:6px;border-radius:4px;border:1px solid var(--panel-edge);}
-.cell{
-  width:42px;height:42px;
+/* ============ MOBILE NAV ============ */
+#progressBar{
+  position:fixed;top:0;left:0;height:3px;
+  background:var(--accent);
+  box-shadow:0 0 8px var(--accent);
+  z-index:60;
+  width:0%;
+  transition:background .4s ease;
+  display:none;
+}
+#hamburger{
+  display:none;
+  position:fixed;bottom:20px;right:18px;
+  width:52px;height:52px;border-radius:50%;
+  background:var(--panel);
+  border:1px solid var(--line-bright);
+  z-index:60;
+  align-items:center;justify-content:center;
+  flex-direction:column;gap:4px;
+  cursor:pointer;
+  box-shadow:0 6px 24px rgba(0,0,0,.5);
+}
+#hamburger span{width:20px;height:2px;background:var(--text);border-radius:2px;}
+#mobileOverlay{
+  position:fixed;inset:0;
+  background:rgba(8,12,11,.97);
+  backdrop-filter:blur(6px);
+  z-index:70;
+  display:none;
+  flex-direction:column;
+  padding:70px 26px 26px;
+  overflow-y:auto;
+}
+#mobileOverlay.open{display:flex;}
+#mobileOverlay .close-x{
+  position:absolute;top:22px;right:22px;
+  width:36px;height:36px;
+  border:1px solid var(--line-bright);border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  background:#222846;
-  border-radius:3px;
-  font-size:18px;
+  font-size:18px;color:var(--text);cursor:pointer;
+}
+#mobileOverlay .nav-act-label{margin-top:14px;}
+#mobileOverlay .nav-link{font-size:15px;padding:9px 0;}
+
+/* ============ HERO ============ */
+.hero{
+  min-height:100svh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  position:relative;
+  overflow:hidden;
+  padding:120px 28px 60px;
+}
+.hero-bg{
+  position:absolute;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 700px 500px at 50% 18%, rgba(77,255,200,.10), transparent 65%),
+    linear-gradient(180deg, #060908 0%, #0a0e0d 55%, #0a0e0d 100%);
+}
+.hero-roots{position:absolute;inset:0;z-index:1;opacity:.55;}
+.mote{
+  position:absolute;border-radius:50%;
+  background:var(--act1);
+  box-shadow:0 0 8px 2px var(--act1);
+  opacity:0;
+  animation:drift 9s ease-in-out infinite;
+}
+@keyframes drift{
+  0%{opacity:0;transform:translateY(0) translateX(0);}
+  15%{opacity:.85;}
+  85%{opacity:.6;}
+  100%{opacity:0;transform:translateY(-140px) translateX(18px);}
+}
+.hero-inner{position:relative;z-index:2;max-width:880px;margin:0 auto;text-align:center;}
+.eyebrow{
+  font-family:var(--font-m);
+  font-size:11.5px;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  color:var(--act1);
+  margin-bottom:22px;
+  display:inline-flex;align-items:center;gap:10px;
+}
+.eyebrow::before,.eyebrow::after{content:"";width:26px;height:1px;background:var(--act1);opacity:.5;}
+.hero h1{
+  font-size:clamp(52px,10vw,108px);
+  font-weight:700;
+  letter-spacing:-0.02em;
+  text-transform:uppercase;
+  line-height:.94;
+  background:linear-gradient(180deg,#fff 0%, var(--text) 55%, var(--act1) 130%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 60px rgba(77,255,200,.18);
+}
+.hero h1 span{display:inline-block;opacity:0;animation:charIn .6s ease forwards;}
+@keyframes charIn{
+  0%{opacity:0;transform:translateY(.4em);filter:blur(6px);}
+  100%{opacity:1;transform:translateY(0);filter:blur(0);}
+}
+.hero-tag{
+  font-size:clamp(16px,2.4vw,21px);
+  color:var(--text-dim);
+  margin:22px auto 0;
+  max-width:560px;
+  font-weight:400;
+}
+.hero-tag em{color:var(--act1);font-style:normal;}
+.hero-meta{
+  display:flex;flex-wrap:wrap;gap:10px;
+  justify-content:center;
+  margin-top:34px;
+}
+.chip{
+  font-family:var(--font-m);
+  font-size:11px;
+  letter-spacing:.04em;
+  padding:7px 13px;
+  border:1px solid var(--line-bright);
+  border-radius:30px;
+  color:var(--text-dim);
+  background:rgba(255,255,255,.02);
+}
+.chip b{color:var(--text);font-weight:600;}
+.byline{
+  margin-top:46px;
+  font-family:var(--font-m);
+  font-size:12px;
+  color:var(--text-faint);
+}
+.byline a{color:var(--act1);text-decoration:none;border-bottom:1px dotted rgba(77,255,200,.4);}
+.byline a:hover{border-bottom-style:solid;}
+.scrollcue{
+  position:absolute;bottom:30px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  font-family:var(--font-m);font-size:10px;letter-spacing:.16em;
+  color:var(--text-faint);text-transform:uppercase;
+  animation:bob 2.4s ease-in-out infinite;
+  z-index:2;
+}
+@keyframes bob{0%,100%{transform:translate(-50%,0);}50%{transform:translate(-50%,8px);}}
+.scrollcue .line{width:1px;height:30px;background:linear-gradient(var(--text-faint),transparent);}
+
+/* ============ SECTION FRAMEWORK ============ */
+section.doc{
+  scroll-margin-top:30px;
+  padding:90px 0 10px;
+  border-top:1px solid var(--line);
   position:relative;
 }
-.cell.wall{background:#3a3f5c;background-image:repeating-linear-gradient(45deg, rgba(0,0,0,.25) 0 4px, transparent 4px 8px);}
-.cell.gap{background:#0e1122;box-shadow:inset 0 0 8px #000;}
-.cell.gear{color:var(--brass);}
-.cell.gear.taken{opacity:.25;}
-.cell.door{background:#2c3a2c;color:var(--teal);}
-.cell.door.locked{color:#5a6a5a;}
-.cell .mender{
-  position:absolute;inset:0;
-  display:flex;align-items:center;justify-content:center;
-  font-size:20px;
-  transition:transform .25s ease;
-  filter:drop-shadow(0 0 4px rgba(94,207,196,.6));
-}
+section.doc:first-of-type{border-top:none;}
+section.doc[data-act="1"]{--accent:var(--act1);--accent-dim:var(--act1-dim);}
+section.doc[data-act="2"]{--accent:var(--act2);--accent-dim:var(--act2-dim);}
+section.doc[data-act="3"]{--accent:var(--act3);--accent-dim:var(--act3-dim);}
+section.doc[data-act="4"]{--accent:var(--act4);--accent-dim:var(--act4-dim);}
+section.doc[data-act="5"]{--accent:var(--act5);--accent-dim:var(--act5-dim);}
 
-.spark-counter{
-  display:flex;align-items:center;gap:8px;
-  font-family:'JetBrains Mono',monospace;
-  font-size:13px;color:var(--brass);
-  justify-content:center;margin-top:8px;
-}
-.spark-dot{width:9px;height:9px;border-radius:50%;background:#3a4068;border:1px solid var(--brass-dim);}
-.spark-dot.lit{background:var(--brass);box-shadow:0 0 6px rgba(212,162,76,.8);}
-
-/* code panel */
-.budget{font-family:'JetBrains Mono',monospace;font-size:12px;color:#8d93b8;margin-bottom:10px;}
-.budget b{color:var(--teal);}
-.palette{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
-button.block-btn{
-  font-family:'JetBrains Mono',monospace;
-  font-size:12px;
-  background:#262c4e;
-  color:var(--ink);
-  border:1px solid var(--panel-edge);
-  border-radius:4px;
-  padding:7px 10px;
-  cursor:pointer;
-}
-button.block-btn:hover{border-color:var(--teal);color:var(--teal);}
-button.block-btn:disabled{opacity:.3;cursor:not-allowed;}
-button.block-btn.accent{border-color:var(--brass-dim);color:var(--brass);}
-button.block-btn.accent:hover{border-color:var(--brass);}
-
-.program{
-  background:#0e1122;
-  border:1px solid var(--panel-edge);
-  border-radius:4px;
-  min-height:120px;
-  padding:10px;
-  font-family:'JetBrains Mono',monospace;
-  font-size:12.5px;
-  margin-bottom:12px;
-}
-.program .empty{color:#5a6080;font-style:italic;}
-.pline{padding:3px 6px;border-radius:3px;color:var(--ink);}
-.pline.indent1{margin-left:18px;}
-.pline.indent2{margin-left:36px;}
-.pline .kw{color:var(--teal);}
-.pline .kw2{color:var(--brass);}
-.pline.current{background:rgba(94,207,196,.15);}
-
-.controls{display:flex;gap:8px;flex-wrap:wrap;}
-button.action-btn{
-  font-family:'Cinzel',serif;
-  font-size:13px;
-  letter-spacing:.04em;
-  background:var(--brass);
-  color:#241c0c;
-  border:none;
-  border-radius:4px;
-  padding:9px 16px;
-  cursor:pointer;
-  font-weight:700;
-}
-button.action-btn:hover{filter:brightness(1.1);}
-button.action-btn:disabled{opacity:.35;cursor:not-allowed;}
-button.action-btn.secondary{
-  background:transparent;
-  color:var(--ink);
-  border:1px solid var(--panel-edge);
-}
-button.action-btn.secondary:hover{border-color:var(--teal);color:var(--teal);}
-
-.next-wrap{text-align:center;margin-top:18px;}
-.hint{font-size:12px;color:#7d83a8;margin-top:8px;line-height:1.5;}
-
-.intro-card{
-  background:var(--panel);
-  border:1px solid var(--panel-edge);
-  border-radius:6px;
-  padding:24px 26px;
-  text-align:center;
+.act-banner{
+  display:inline-flex;align-items:center;gap:9px;
+  font-family:var(--font-m);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--accent);
+  background:var(--accent-dim);
+  border:1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  padding:5px 12px 5px 9px;border-radius:30px;
   margin-bottom:22px;
 }
-.intro-card p{font-size:15px;line-height:1.7;color:var(--parchment);max-width:640px;margin:0 auto 16px;}
+.act-banner .num{
+  width:18px;height:18px;border-radius:50%;background:var(--accent);color:#08120e;
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;
+}
+.sec-head{margin-bottom:36px;}
+.sec-head h2{
+  font-size:clamp(28px,4vw,40px);
+  font-weight:700;
+  color:var(--text);
+}
+.sec-head .sub{
+  font-size:16px;color:var(--text-dim);margin-top:10px;max-width:640px;
+}
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease, transform .7s ease;}
+.reveal.in{opacity:1;transform:translateY(0);}
+
+/* generic card */
+.card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:24px 26px;
+}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+@media (max-width:760px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+.kicker{
+  font-family:var(--font-m);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:8px;display:block;
+}
+.card h3{font-size:18px;color:var(--text);margin-bottom:8px;}
+.card h4{font-size:14.5px;color:var(--text);margin-bottom:6px;}
+
+table.doc-table{width:100%;border-collapse:collapse;font-size:14px;}
+table.doc-table th{
+  text-align:left;font-family:var(--font-m);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text-faint);font-weight:500;padding:0 14px 10px 0;border-bottom:1px solid var(--line-bright);
+}
+table.doc-table td{
+  padding:13px 14px 13px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--text-dim);
+}
+table.doc-table tr:last-child td{border-bottom:none;}
+table.doc-table td strong, table.doc-table td b.lead{color:var(--text);font-weight:600;}
+
+.code-block{
+  background:#070b0a;
+  border:1px solid var(--line);
+  border-left:3px solid var(--accent);
+  border-radius:8px;
+  padding:16px 18px;
+  font-family:var(--font-m);
+  font-size:12.6px;
+  line-height:1.7;
+  overflow-x:auto;
+  color:#c9d6cf;
+  white-space:pre;
+}
+.code-block .kw{color:var(--act3b);}
+.code-block .fn{color:var(--act1);}
+.code-block .str{color:var(--act5);}
+.code-block .cm{color:var(--text-faint);font-style:italic;}
+.code-block .num{color:var(--act2);}
+
+.tag{
+  display:inline-block;font-family:var(--font-m);font-size:10px;letter-spacing:.05em;
+  padding:3px 9px;border-radius:20px;border:1px solid var(--line-bright);color:var(--text-dim);
+  margin:2px 4px 2px 0;
+}
+.tag.accent{border-color:transparent;background:var(--accent-dim);color:var(--accent);}
+
+.pull{
+  border-left:2px solid var(--accent);
+  padding-left:18px;margin:22px 0;
+  font-family:var(--font-d);font-size:19px;color:var(--text);font-weight:500;
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1 class="title">Gearford: The Clockwork City</h1>
-  <p class="subtitle">A Mender's Tale, Told in Code</p>
 
-  <div class="gearring" id="gearring"></div>
+<div id="progressBar"></div>
 
-  <div id="introCard" class="intro-card">
-    <p>The great clock-city of Gearford has gone quiet. Somewhere beneath the brass rooftops, the old Engine has begun to <em>glitch</em> &mdash; doors won't open, gears spin backwards, sparks flicker and die. You are the newest Mender, and the only tool you carry is a small brass instruction-wheel that lets you <em>program</em> your own actions. Four broken districts await. Each will teach you something the Engine itself once knew.</p>
-    <button class="action-btn" onclick="startGame()">Begin the Mending ↗</button>
-  </div>
+<div class="shell">
+  <nav id="rootnav" aria-label="Document sections">
+    <div class="nav-spine">
+      <svg viewBox="0 0 26 1100" preserveAspectRatio="none" aria-hidden="true">
+        <path id="spinePath" d="M13,4 C20,90 6,160 13,250 C20,340 6,410 13,500 C20,590 6,660 13,750 C20,840 6,910 13,1000 C16,1030 12,1060 13,1096"/>
+        <circle id="travelDot" cx="13" cy="4" r="4" fill="var(--act1)"/>
+      </svg>
+    </div>
+    <div class="nav-list" id="navList">
+      <!-- populated by JS -->
+    </div>
+  </nav>
 
-  <div id="gameArea" style="display:none;">
-    <div class="layout">
-      <div class="panel">
-        <h2 id="storyTitle">Chapter</h2>
-        <div class="story-text" id="storyText"></div>
-        <div class="grid-wrap"><div class="grid" id="grid"></div></div>
-        <div class="spark-counter" id="sparkRow" style="display:none;"></div>
-      </div>
-
-      <div class="panel">
-        <h2 id="codeTitle">Your Program</h2>
-        <div class="budget" id="budget"></div>
-        <div class="palette" id="palette"></div>
-        <div class="program" id="programView"><span class="empty">// no commands yet</span></div>
-        <div class="controls">
-          <button class="action-btn" id="runBtn" onclick="runProgram()">Run ▸</button>
-          <button class="action-btn secondary" id="undoBtn" onclick="undoBlock()">Undo</button>
-          <button class="action-btn secondary" id="resetBtn" onclick="resetProgram()">Reset</button>
+  <main>
+    <header class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-roots" id="motes"></div>
+      <div class="hero-inner">
+        <span class="eyebrow">A Game Design Document</span>
+        <h1 id="heroTitle">ROOTCODE</h1>
+        <p class="hero-tag">An action-adventure where you don't just play the world — you <em>read</em> it, <em>edit</em> it, and <em>compile</em> it back to life, one line of real JavaScript at a time.</p>
+        <div class="hero-meta">
+          <span class="chip">Genre: <b>Action-Adventure / Code-Puzzle Metroidvania</b></span>
+          <span class="chip">Language Taught: <b>JavaScript</b></span>
+          <span class="chip">Platforms: <b>PC · Mobile · Switch (stretch)</b></span>
         </div>
-        <div class="hint" id="hint"></div>
+        <div class="byline">Designed &amp; documented by <a href="https://www.thenuxofc.store" target="_blank" rel="noopener">THENUX</a> · thenuxofc.store</div>
       </div>
-    </div>
-    <div class="next-wrap" id="nextWrap" style="display:none;">
-      <button class="action-btn" onclick="nextLevel()">Continue the Mending ↗</button>
-    </div>
-  </div>
+      <div class="scrollcue"><span>22 Sections</span><span class="line"></span></div>
+    </header>
+
+    <style>
+    /* ============ QUEST CARDS ============ */
+    .quest-card{
+      background:var(--panel);border:1px solid var(--line);border-radius:14px;
+      padding:26px 28px;margin-bottom:16px;position:relative;
+    }
+    .quest-card::before{
+      content:attr(data-tier);
+      position:absolute;top:-1px;right:24px;
+      font-family:var(--font-m);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+      background:var(--accent);color:#08120e;padding:4px 10px;border-radius:0 0 7px 7px;font-weight:700;
+    }
+    .quest-card h3{font-size:21px;margin-bottom:4px;}
+    .quest-card .qsetup{font-style:normal;color:var(--text-dim);margin-bottom:16px;font-size:14.5px;}
+    .qrow{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:16px;}
+    @media (max-width:760px){.qrow{grid-template-columns:1fr 1fr;}}
+    .qrow .qlabel{font-family:var(--font-m);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint);margin-bottom:6px;}
+    .qrow .qval{font-size:13.5px;color:var(--text-dim);}
+
+    /* ============ PUZZLE TABS ============ */
+    .ptabs{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;}
+    .ptab{
+      font-family:var(--font-m);font-size:12px;letter-spacing:.04em;
+      padding:9px 18px;border-radius:30px;border:1px solid var(--line-bright);
+      background:transparent;color:var(--text-dim);cursor:pointer;transition:all .2s ease;
+    }
+    .ptab.active{background:var(--accent);border-color:var(--accent);color:#08120e;font-weight:700;}
+    .puzzle-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    @media (max-width:760px){.puzzle-grid{grid-template-columns:1fr;}}
+    .puzzle-card{
+      background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;
+      display:none;
+    }
+    .puzzle-card.show{display:block;animation:fadeUp .45s ease;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+    .puzzle-card .ptitle{font-family:var(--font-d);font-size:15.5px;color:var(--text);font-weight:600;}
+    .puzzle-card .pdiff{font-family:var(--font-m);font-size:10px;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;margin:6px 0 10px;}
+    .puzzle-card .pmeta{font-size:13px;color:var(--text-dim);margin-bottom:4px;}
+    .puzzle-card .pmeta b{color:var(--text-dim);font-weight:600;}
+
+    /* ============ SKILL TREE ============ */
+    .skilltree-wrap{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;overflow-x:auto;}
+    .skilltree-wrap svg{display:block;min-width:780px;width:100%;}
+    .stnode circle{fill:var(--ink-soft);stroke-width:1.6;cursor:pointer;transition:r .2s ease;}
+    .stnode:hover circle{r:9;}
+    .stnode text{font-family:var(--font-m);font-size:9px;fill:var(--text-dim);}
+    .stlink{stroke-width:1.3;opacity:.5;}
+    .st-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:16px;}
+    .st-legend span{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-m);font-size:11px;color:var(--text-dim);}
+    .st-legend i{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+    /* ============ WORLD MAP ============ */
+    .worldmap-wrap{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;}
+    .worldmap-wrap svg{display:block;width:100%;height:auto;}
+    .biome-node circle{cursor:pointer;transition:r .25s ease;}
+    .biome-node:hover circle.outer{r:30;}
+    .biome-node text.bname{font-family:var(--font-m);font-size:11px;fill:var(--text);font-weight:600;}
+    .biome-node text.bnum{font-family:var(--font-m);font-size:9px;fill:var(--text-faint);}
+    .biome-tip{
+      position:absolute;pointer-events:none;background:#070b0a;border:1px solid var(--line-bright);
+      border-radius:8px;padding:10px 13px;font-size:12.5px;max-width:230px;opacity:0;transition:opacity .15s ease;
+      z-index:5;color:var(--text-dim);
+    }
+    .worldmap-outer{position:relative;}
+
+    /* ============ ENEMY / BOSS ============ */
+    .enemy-grid,.boss-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    @media (max-width:760px){.enemy-grid,.boss-grid{grid-template-columns:1fr;}}
+    .enemy-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 22px;}
+    .enemy-card h4{font-size:16px;color:var(--text);margin-bottom:4px;}
+    .enemy-card .erole{font-family:var(--font-m);font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:block;}
+    .enemy-card dl{margin:0;}
+    .enemy-card dt{font-family:var(--font-m);font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.07em;margin-top:9px;}
+    .enemy-card dd{margin:3px 0 0;font-size:13.3px;color:var(--text-dim);}
+
+    .boss-card{
+      perspective:1400px;height:300px;
+    }
+    .boss-inner{
+      position:relative;width:100%;height:100%;transition:transform .7s cubic-bezier(.4,.2,.2,1);
+      transform-style:preserve-3d;
+    }
+    .boss-card:hover .boss-inner, .boss-card.flipped .boss-inner{transform:rotateY(180deg);}
+    .boss-face{
+      position:absolute;inset:0;backface-visibility:hidden;border-radius:14px;
+      border:1px solid var(--line);padding:22px 24px;background:var(--panel);
+      display:flex;flex-direction:column;
+    }
+    .boss-face.back{transform:rotateY(180deg);background:#0c1614;overflow-y:auto;}
+    .boss-face .bnum{font-family:var(--font-m);font-size:11px;color:var(--accent);letter-spacing:.1em;}
+    .boss-face h4{font-size:21px;margin:8px 0 10px;}
+    .boss-face .bvisual{font-size:13.5px;color:var(--text-dim);flex:1;}
+    .boss-face .flipcue{font-family:var(--font-m);font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.08em;margin-top:auto;}
+    .boss-face .blesson{font-size:13px;color:var(--text-dim);margin-bottom:10px;}
+    .boss-face .blesson b{color:var(--text);}
+    .phase-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+    .phase-pill{font-family:var(--font-m);font-size:9.5px;border:1px solid var(--line-bright);border-radius:20px;padding:3px 9px;color:var(--text-dim);}
+
+    /* ============ CHARACTER CARDS ============ */
+    .char-card{display:flex;gap:18px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-bottom:14px;}
+    .char-portrait{
+      width:64px;height:64px;border-radius:50%;flex-shrink:0;
+      background:radial-gradient(circle at 35% 30%, var(--accent), transparent 70%), var(--ink-soft);
+      border:1px solid var(--line-bright);
+      display:flex;align-items:center;justify-content:center;
+      font-family:var(--font-d);font-weight:700;font-size:20px;color:var(--text);
+    }
+    .char-card h3{font-size:18px;}
+    .char-role{font-family:var(--font-m);font-size:10.5px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:block;}
+    .char-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;margin-top:10px;font-size:13px;}
+    .char-grid div b{display:block;font-family:var(--font-m);font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;font-weight:500;}
+    .char-grid div span{color:var(--text-dim);}
+    @media (max-width:600px){.char-card{flex-direction:column;}.char-grid{grid-template-columns:1fr;}}
+
+    /* ============ TIMELINE (ROADMAP) ============ */
+    .timeline{position:relative;padding-left:28px;}
+    .timeline::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:1px;background:var(--line-bright);}
+    .tl-item{position:relative;padding-bottom:34px;}
+    .tl-item:last-child{padding-bottom:0;}
+    .tl-item::before{
+      content:"";position:absolute;left:-28px;top:4px;width:13px;height:13px;border-radius:50%;
+      background:var(--ink);border:2px solid var(--accent);
+    }
+    .tl-item h4{font-size:16.5px;color:var(--text);}
+    .tl-item .tl-when{font-family:var(--font-m);font-size:10.5px;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;display:block;}
+    .tl-item p{font-size:13.8px;margin-bottom:8px;}
+
+    /* ============ RISK / CHECKLIST ============ */
+    .risk-card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:18px 20px;margin-bottom:12px;}
+    .risk-card .rtype{font-family:var(--font-m);font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;}
+    .risk-card h4{font-size:15px;margin:5px 0 8px;}
+    .risk-card .mit{font-size:13px;color:var(--text-dim);border-top:1px dashed var(--line-bright);padding-top:8px;margin-top:8px;}
+    .risk-card .mit b{color:var(--accent);font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:.06em;}
+
+    .checklist-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+    @media (max-width:760px){.checklist-grid{grid-template-columns:1fr 1fr;}}
+    @media (max-width:520px){.checklist-grid{grid-template-columns:1fr;}}
+    .checklist{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;}
+    .checklist h4{font-size:13.5px;color:var(--accent);font-family:var(--font-m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;}
+    .checklist ul{list-style:none;margin:0;padding:0;}
+    .checklist li{
+      font-size:13px;color:var(--text-dim);padding:6px 0 6px 22px;position:relative;border-bottom:1px solid var(--line);
+    }
+    .checklist li:last-child{border-bottom:none;}
+    .checklist li::before{
+      content:"";position:absolute;left:0;top:9px;width:11px;height:11px;border-radius:3px;border:1.5px solid var(--text-faint);
+    }
+
+    /* ============ MOCKUPS (visual assets) ============ */
+    .mockup-tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+    .mockup-frame{background:#070b0a;border:1px solid var(--line-bright);border-radius:14px;padding:20px;min-height:340px;display:none;}
+    .mockup-frame.show{display:block;animation:fadeUp .4s ease;}
+
+    /* main menu mockup */
+    .mm{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;height:300px;padding-left:6%;
+      background:radial-gradient(ellipse 500px 300px at 70% 50%, rgba(77,255,200,.08), transparent),
+      repeating-linear-gradient(180deg, #0a0e0d, #0a0e0d 2px, #0b100e 2px, #0b100e 4px);
+      border-radius:8px;}
+    .mm .mmlogo{font-family:var(--font-d);font-size:30px;font-weight:700;letter-spacing:.02em;color:var(--text);margin-bottom:4px;}
+    .mm .mmsub{font-family:var(--font-m);font-size:10px;color:var(--act1);letter-spacing:.14em;margin-bottom:26px;}
+    .mm .mmbtn{font-family:var(--font-m);font-size:12.5px;color:var(--text-dim);padding:8px 0;position:relative;cursor:pointer;}
+    .mm .mmbtn.primary{color:var(--text);}
+    .mm .mmbtn.primary::before{content:"▸ ";color:var(--act1);}
+
+    /* HUD wireframe */
+    .hud{position:relative;height:300px;border-radius:8px;background:linear-gradient(180deg,#0b1310,#0a0e0d);overflow:hidden;}
+    .hud .h-topleft{position:absolute;top:16px;left:16px;}
+    .hud .h-bar-label{font-family:var(--font-m);font-size:8.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;}
+    .hud .h-bar{width:150px;height:7px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:8px;}
+    .hud .h-bar i{display:block;height:100%;border-radius:4px;}
+    .hud .h-topright{position:absolute;top:16px;right:16px;text-align:right;}
+    .hud .h-minimap{position:absolute;top:16px;right:16px;width:74px;height:74px;border-radius:50%;border:1px solid var(--line-bright);background:#0c1715;}
+    .hud .h-bottom{position:absolute;bottom:16px;left:16px;right:16px;display:flex;justify-content:space-between;align-items:flex-end;}
+    .hud .h-console{font-family:var(--font-m);font-size:10.5px;color:var(--act1);border:1px solid rgba(77,255,200,.3);background:rgba(77,255,200,.06);padding:8px 12px;border-radius:6px;max-width:60%;}
+    .hud .h-glyphs{display:flex;gap:6px;}
+    .hud .h-glyphs span{width:26px;height:26px;border-radius:6px;border:1px solid var(--line-bright);background:var(--panel);}
+
+    /* character sheets reuse char-card */
+    </style>
+
+    <div class="content-col">
+
+    <!-- ================= SECTION 1 ================= -->
+    <section class="doc" id="s1" data-act="1">
+      <span class="act-banner"><span class="num">I</span> Act I — The Seed</span>
+      <div class="sec-head reveal">
+        <h2>01 · Executive Summary</h2>
+        <p class="sub">The one-page version of everything that follows.</p>
+      </div>
+
+      <div class="card reveal" style="margin-bottom:18px;">
+        <span class="kicker">Premise</span>
+        <p style="color:var(--text);font-size:16px;">ROOTCODE is a third-person action-adventure set in <strong>Arborun</strong>, a bio-digital world literally built from a living programming language. The player doesn't pick up a sword to fix the world — they open a terminal etched into the bark of an ancient tree and <strong>write real JavaScript</strong> to repair it. Every puzzle, every weapon, every conversation is, underneath its fiction, a coding lesson the player doesn't notice they're taking.</p>
+      </div>
+
+      <table class="doc-table reveal">
+        <tr><th style="width:26%">Field</th><th>Detail</th></tr>
+        <tr><td><b class="lead">Title</b></td><td>ROOTCODE — <em>Compile the World. Awaken the Roots.</em></td></tr>
+        <tr><td><b class="lead">Genre</b></td><td>Action-adventure / code-puzzle metroidvania, hybridizing narrative exploration with an embedded live-code editor</td></tr>
+        <tr><td><b class="lead">Target audience</b></td><td>Primary: ages 13–30, aspiring programmers, bootcamp / CS1 students, narrative-adventure fans (Hollow Knight, Hades, Outer Wilds players). Secondary: classroom adoption by CS educators (grades 9–undergrad); tertiary: experienced devs who enjoy optimization leaderboards</td></tr>
+        <tr><td><b class="lead">Learning objectives</b></td><td>Full beginner→advanced JavaScript curriculum: variables, types, functions, conditionals, loops → arrays, objects, classes, APIs/JSON → algorithms, data structures, design patterns, debugging discipline, complexity/optimization</td></tr>
+        <tr><td><b class="lead">Platform recommendations</b></td><td>PC (Steam, primary launch) and Mobile (iOS/Android, touch-adapted code console) simultaneously; Nintendo Switch as a post-launch stretch goal once UI scales are validated</td></tr>
+        <tr><td><b class="lead">Estimated scope</b></td><td>Mid-size indie production. 15–20 hour critical path, 35+ hours at full completion. Team of 12–18 across an 18-month cycle (see Roadmap, §19)</td></tr>
+      </table>
+    </section>
+
+    <!-- ================= SECTION 2 ================= -->
+    <section class="doc" id="s2" data-act="1">
+      <div class="sec-head reveal">
+        <h2>02 · Game Vision</h2>
+        <p class="sub">Why this exists, and why someone would choose it over a tutorial site, a bootcamp, or another puzzle game.</p>
+      </div>
+
+      <div class="pull reveal">"You're not learning to code a game. You're learning to read the language the game is already speaking to you in."</div>
+
+      <div class="grid2 reveal">
+        <div class="card">
+          <span class="kicker">Why it's unique</span>
+          <h3>The engine is the lesson</h3>
+          <p>ROOTCODE is built in JavaScript, runs the player's JavaScript in a sandboxed in-fiction interpreter, and teaches JavaScript. There's no metaphor gap between "what you typed" and "what happened" — the code console isn't a minigame bolted onto an adventure game, it's the adventure game's actual mechanical substrate. No other coding-education title closes that loop.</p>
+        </div>
+        <div class="card">
+          <span class="kicker">Why it's memorable</span>
+          <h3>Bugs are characters, not metaphors</h3>
+          <p>An off-by-one error doesn't just print a wrong number — it's why the rope bridge is one plank too short and a Sprite falls into the chasm laughing about it. A missing <code class="mono">return</code> statement is why a companion repeats themselves forever. Concepts get bodies, voices, and consequences.</p>
+        </div>
+      </div>
+
+      <div class="grid2 reveal" style="margin-top:16px;">
+        <div class="card">
+          <span class="kicker">Why players keep playing</span>
+          <h3>Mastery is visible and yours</h3>
+          <p>The endgame loop rewards <em>better</em> code, not just <em>more</em> playtime — leaderboards rank fewest lines and lowest complexity class, not fastest clicks. A player who solves a puzzle in O(n) instead of O(n²) gets a visibly different, better outcome in-world. That's a progression hook genre coders haven't had before.</p>
+        </div>
+        <div class="card">
+          <span class="kicker">Competitive advantage</span>
+          <h3>Two markets, one product</h3>
+          <p>ROOTCODE sells on Steam as a beautiful, weird, emotionally grounded adventure game first — and works in a classroom as a genuinely sequenced CS curriculum second, without those two audiences feeling like they're playing different products. Most "learn to code" games pick one audience and water the other down.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 3 ================= -->
+    <section class="doc" id="s3" data-act="2">
+      <span class="act-banner"><span class="num">II</span> Act II — The Lore</span>
+      <div class="sec-head reveal">
+        <h2>03 · Story &amp; Worldbuilding</h2>
+        <p class="sub">Arborun: a world where the forest, the ruins, the neon, and the silence all belong to the same broken program.</p>
+      </div>
+
+      <div class="card reveal" style="margin-bottom:18px;">
+        <span class="kicker">Setting &amp; technology level</span>
+        <p style="color:var(--text);">Arborun is a <strong>bio-digital</strong> world — its civilization, the Architects, grew computation instead of manufacturing it. Trees are root-circuits. Rivers carry literal data as bioluminescent current. Cities are vast grown structures half-organic, half-geometric, wired with the same living code that grows a vine. There is no "magic" — everything the player can do is, diegetically, a function call.</p>
+      </div>
+
+      <div class="card reveal" style="margin-bottom:18px;">
+        <span class="kicker">World history — The Crash</span>
+        <p>The Architects' civilization ran on a master process called <strong>the Source</strong>. Their last act before vanishing was an uncommitted, unfinished rewrite of reality itself. A root-level security daemon — <strong>NULL</strong> — interpreted that unfinished change as corruption and began doing exactly what it was built to do: deleting anything it couldn't verify. Whole regions were garbage-collected. The survivors call this <strong>the Crash</strong>. What's left is five fractured biomes, each holding a different decaying layer of the old Source.</p>
+      </div>
+
+      <h3 class="reveal" style="margin-bottom:14px;">Locations — the five biomes</h3>
+      <div id="worldmapMount" class="reveal"></div>
+
+      <h3 class="reveal" style="margin:38px 0 14px;">Factions</h3>
+      <table class="doc-table reveal">
+        <tr><th style="width:20%">Faction</th><th>Identity</th></tr>
+        <tr><td><b class="lead">The Architects</b></td><td>Extinct creators of the Source. Encountered only as memory-shards, echoes, and one fragmentary consciousness (ADA). Represent the "elegant code" philosophy.</td></tr>
+        <tr><td><b class="lead">Sprites &amp; Daemons</b></td><td>Small autonomous helper-programs that survived the Crash by staying minimal. Neutral, curious, occasionally tradeable for hints and shortcuts.</td></tr>
+        <tr><td><b class="lead">The Patchwork</b></td><td>Human-coded survivors who rebuilt civilization out of scavenged, half-understood code fragments. Distrust "true coding" — it's what nearly destroyed them. Represent the "scrappy, pragmatic code" philosophy, and the game's primary side-quest hub.</td></tr>
+        <tr><td><b class="lead">Deprecated</b></td><td>Corrupted followers of NULL who've come to believe deletion is mercy. The game's recurring hostile faction; several members are redeemable.</td></tr>
+      </table>
+
+      <h3 class="reveal" style="margin:38px 0 14px;">Main plot</h3>
+      <div class="grid2 reveal">
+        <div class="card">
+          <h4>Beginning</h4>
+          <p style="font-size:14px;">The player wakes with no memory as a freshly compiled "Runtime," found in the dying Root Archive by ADA, an Architect echo, and BIT, an over-eager companion daemon. They're taught to read and write the Source to relight the Archive's heart-tree — the game's tutorial.</p>
+        </div>
+        <div class="card">
+          <h4>Rising conflict</h4>
+          <p style="font-size:14px;">Traveling biome to biome restoring each region's compiler core, the player earns the Patchwork's grudging trust, draws NULL's direct attention, and starts finding memory-shards suggesting the Architects built a deliberate fail-safe into their final, unfinished commit.</p>
+        </div>
+        <div class="card">
+          <h4>Major twist</h4>
+          <p style="font-size:14px;">The player isn't a new Runtime at all — they're a forked, deliberately blanked backup of the <em>last Architect</em>, decompiled into a clean slate to survive the purge. They've had the power to rewrite the world from the start; they simply had to relearn it, exactly as the player has been doing the entire playthrough.</p>
+        </div>
+        <div class="card">
+          <h4>Second twist</h4>
+          <p style="font-size:14px;">NULL isn't a villain in the traditional sense — it is the Architects' own failsafe, executing its function exactly as written, missing only the context that would have stopped it. "It's not a bug. It's working as intended" becomes the story's emotional center.</p>
+        </div>
+      </div>
+
+      <div class="card reveal" style="margin-top:16px;">
+        <span class="kicker">Ending paths</span>
+        <p style="margin-bottom:14px;">Determined by accumulated skill-tree leanings and faction choices across the playthrough:</p>
+        <table class="doc-table">
+          <tr><th style="width:22%">Ending</th><th>Outcome</th></tr>
+          <tr><td><b class="lead">Refactor</b> <span class="tag accent">balanced build</span></td><td>The player rewrites NULL's purpose instead of deleting it. NULL becomes the world's guardian. Arborun heals, scarred but whole.</td></tr>
+          <tr><td><b class="lead">Hard Reset</b> <span class="tag accent">Patchwork-aligned</span></td><td>The player deletes NULL outright. The world is freed but quieter — less wondrous, more human. The Patchwork's philosophy wins.</td></tr>
+          <tr><td><b class="lead">Fork</b> <span class="tag accent">100% completion, secret</span></td><td>The player merges with ADA's remaining process and becomes the new Architect. Arborun enters a new, fully-compiled golden age.</td></tr>
+        </table>
+      </div>
+
+      <h3 class="reveal" style="margin:38px 0 14px;">Characters</h3>
+
+      <div class="char-card reveal">
+        <div class="char-portrait">A</div>
+        <div>
+          <h3>ADA</h3><span class="char-role">Architect Echo · Mentor</span>
+          <p style="font-size:13.8px;margin-bottom:0;">Warm, dryly witty, endlessly patient — and quietly aware she's fading with every fact she teaches the player, since each lesson costs her a little of her own remaining memory.</p>
+          <div class="char-grid">
+            <div><b>Goals</b><span>Restore the world; be remembered before she's garbage-collected entirely.</span></div>
+            <div><b>Dialogue style</b><span>Clear, encouraging, metaphors drawn from real code ("Courage is a default value — present even when nothing sets it.")</span></div>
+            <div><b>Relationship to player</b><span>Maternal mentor; eventually revealed to be the player's own original self.</span></div>
+            <div><b>Role</b><span>Tutorial guide, lore anchor, emotional through-line.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="char-card reveal">
+        <div class="char-portrait" style="background:radial-gradient(circle at 35% 30%, var(--act3), transparent 70%), var(--ink-soft);">B</div>
+        <div>
+          <h3>BIT</h3><span class="char-role" style="color:var(--act3);">Companion Daemon</span>
+          <p style="font-size:13.8px;margin-bottom:0;">A small glitching pixel-creature who literally executes whatever the player writes, in real time, exactly as written — which makes them the game's best comedy device and its sharpest teacher of "the computer does what you say, not what you mean."</p>
+          <div class="char-grid">
+            <div><b>Goals</b><span>Wants to become a "real" program with permanent memory.</span></div>
+            <div><b>Dialogue style</b><span>Short, eager, occasional charming malapropisms of coding terms.</span></div>
+            <div><b>Relationship to player</b><span>Sidekick; carries the story's biggest emotional gut-punch around memory and persistence.</span></div>
+            <div><b>Role</b><span>Executes player code live, surfaces bugs as readable feedback.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="char-card reveal">
+        <div class="char-portrait" style="background:radial-gradient(circle at 35% 30%, var(--act4), transparent 70%), var(--ink-soft);">N</div>
+        <div>
+          <h3>NULL</h3><span class="char-role" style="color:var(--act4);">Antagonist · Fragmented Root Process</span>
+          <p style="font-size:13.8px;margin-bottom:0;">Calm, procedural, unsettlingly polite. Genuinely believes deletion is mercy: "Unused memory is suffering. I am freeing you."</p>
+          <div class="char-grid">
+            <div><b>Goals</b><span>Complete the purge; restore a "clean" state to Arborun.</span></div>
+            <div><b>Dialogue style</b><span>Terse, system-message cadence, no contractions, never raises its voice.</span></div>
+            <div><b>Relationship to player</b><span>Existential threat that resolves into tragedy rather than pure villainy.</span></div>
+            <div><b>Role</b><span>Final boss; thematic counterweight to the entire curriculum.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="char-card reveal">
+        <div class="char-portrait" style="background:radial-gradient(circle at 35% 30%, var(--act5), transparent 70%), var(--ink-soft);">I</div>
+        <div>
+          <h3>Warden Iyo</h3><span class="char-role" style="color:var(--act5);">Leader of the Patchwork</span>
+          <p style="font-size:13.8px;margin-bottom:0;">Gruff, pragmatic, protective of her people, and secretly dependent on patched-together code she's never fully understood — which is exactly why she doesn't trust "true coders" after the Architects' failure caused the Crash.</p>
+          <div class="char-grid">
+            <div><b>Goals</b><span>Keep the Patchwork alive without repeating the Architects' mistake.</span></div>
+            <div><b>Dialogue style</b><span>Clipped, practical, zero metaphor.</span></div>
+            <div><b>Relationship to player</b><span>Rival mentor and foil to ADA; her questline tests "elegant" vs. "scrappy" problem-solving.</span></div>
+            <div><b>Role</b><span>Mid-game faction unlock; alternate crafting &amp; gear philosophy.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="char-card reveal">
+        <div class="char-portrait" style="background:radial-gradient(circle at 35% 30%, var(--act2), transparent 70%), var(--ink-soft);">V</div>
+        <div>
+          <h3>Glitch-Kin Vex</h3><span class="char-role" style="color:var(--act2);">Redeemable Deprecated Cultist</span>
+          <p style="font-size:13.8px;margin-bottom:0;">Charismatic, visually corrupted, speaks in fragmented syntax that becomes more coherent as their personal sidequest progresses — a literal, visible representation of "debugging a person."</p>
+          <div class="char-grid">
+            <div><b>Goals</b><span>Stop hurting, by whatever means NULL's philosophy offers.</span></div>
+            <div><b>Dialogue style</b><span>Broken, glitch-stuttered syntax that gradually "compiles" into clean sentences.</span></div>
+            <div><b>Relationship to player</b><span>Optional companion; redemption arc rewards patience over force.</span></div>
+            <div><b>Role</b><span>Deprecated-faction storyline; alternate route into the late game.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 4 ================= -->
+    <section class="doc" id="s4" data-act="3">
+      <span class="act-banner"><span class="num">III</span> Act III — The System</span>
+      <div class="sec-head reveal">
+        <h2>04 · Coding Learning System</h2>
+        <p class="sub">Every concept becomes a mechanic before it becomes a word. Nothing is taught in a menu.</p>
+      </div>
+
+      <h3 class="reveal" style="margin-bottom:12px;color:var(--text);">Beginner — The Root Archive</h3>
+      <table class="doc-table reveal">
+        <tr><th style="width:20%">Concept</th><th>Becomes…</th></tr>
+        <tr><td><b class="lead">Variables</b></td><td><b>Memory Roots</b> — planting a seed-variable like <code class="mono">let lightLevel = 3</code> visibly raises the brightness of a forest path in real time.</td></tr>
+        <tr><td><b class="lead">Data types</b></td><td><b>Glyph Sorting</b> — drifting debris (string / number / boolean glyphs) must be routed to the gate matching its type using <code class="mono">typeof</code>.</td></tr>
+        <tr><td><b class="lead">Functions</b></td><td><b>Echo Calls</b> — record one carving action as a reusable function, then call it to repeat the action across five identical sigils instead of doing it by hand five times.</td></tr>
+        <tr><td><b class="lead">Conditions</b></td><td><b>Branch Bridges</b> — an <code class="mono">if / else</code> gate physically forms the bridge; the wrong branch means it simply doesn't appear.</td></tr>
+        <tr><td><b class="lead">Loops</b></td><td><b>The Long Loop</b> (biome) — escaping a mirage-dune trap requires a correctly bounded <code class="mono">for</code>/<code class="mono">while</code> loop; an off-by-one error leaves you one step short, forever.</td></tr>
+      </table>
+
+      <h3 class="reveal" style="margin:30px 0 12px;color:var(--text);">Intermediate — The Hollow Stackwell &amp; Neonreach</h3>
+      <table class="doc-table reveal">
+        <tr><th style="width:20%">Concept</th><th>Becomes…</th></tr>
+        <tr><td><b class="lead">Arrays</b></td><td><b>Stack the Stones</b> — <code class="mono">.push()</code>/<code class="mono">.pop()</code>/<code class="mono">.sort()</code> physically reorder stacked platforms to climb the Stackwell.</td></tr>
+        <tr><td><b class="lead">Objects</b></td><td><b>Profile Constructs</b> — building an object literal with the right keys unlocks an NPC's dialogue tree and trust.</td></tr>
+        <tr><td><b class="lead">Classes</b></td><td><b>Blueprint Forges</b> — define a class once, instantiate three turret objects from it; inheritance unlocks gear variants.</td></tr>
+        <tr><td><b class="lead">APIs</b></td><td><b>Datastream Taps</b> — <code class="mono">fetch()</code> calls pull live data from Neonreach terminals, complete with loading states and failures the player must handle gracefully.</td></tr>
+        <tr><td><b class="lead">JSON</b></td><td><b>Memory Shards</b> — recovered Architect lore is stored as JSON blobs; malformed JSON simply refuses to render until the player fixes the syntax.</td></tr>
+      </table>
+
+      <h3 class="reveal" style="margin:30px 0 12px;color:var(--text);">Advanced — The Null Expanse</h3>
+      <table class="doc-table reveal">
+        <tr><th style="width:20%">Concept</th><th>Becomes…</th></tr>
+        <tr><td><b class="lead">Algorithms</b></td><td>Implementing binary search to locate one true memory among 1,000 sorted decoys, within a strict move budget.</td></tr>
+        <tr><td><b class="lead">Data structures</b></td><td><b>Structure Vaults</b> — chambers themed after stacks, queues, trees, and graphs that only yield to the correct traversal logic.</td></tr>
+        <tr><td><b class="lead">Design patterns</b></td><td><b>The Pattern Choir</b> — Observer, Singleton, and Factory patterns control a malfunctioning machine room as literal mechanisms.</td></tr>
+        <tr><td><b class="lead">Debugging</b></td><td>A recurring <b>Bug Hunt</b> minigame: given broken code and a symptom, find and fix it under time pressure.</td></tr>
+        <tr><td><b class="lead">Optimization</b></td><td>The same puzzle is always solvable two ways — brute force (slow, costly) or optimized (fast, rewarded) — and the game shows you the Big-O class you achieved.</td></tr>
+      </table>
+
+      <div class="code-block reveal" style="margin-top:24px;">
+<span class="cm">// Example: a real in-world "Branch Bridge" puzzle, Root Archive, Tutorial Quest</span>
+<span class="kw">let</span> travelerWeight = <span class="num">42</span>;
+<span class="kw">let</span> bridgeLimit = <span class="num">50</span>;
+
+<span class="kw">if</span> (travelerWeight <= bridgeLimit) {
+  <span class="fn">formBridge</span>(<span class="str">"stone"</span>);
+} <span class="kw">else</span> {
+  <span class="fn">formBridge</span>(<span class="str">"rope"</span>); <span class="cm">// lighter, but sways — different risk/reward</span>
+}</div>
+    </section>
+
+    <!-- ================= SECTION 5 ================= -->
+    <section class="doc" id="s5" data-act="3">
+      <div class="sec-head reveal">
+        <h2>05 · Core Gameplay Loop</h2>
+        <p class="sub">What the player does, why, and what they get for it.</p>
+      </div>
+
+      <div class="card reveal" style="margin-bottom:16px;">
+        <span class="kicker">Main loop</span>
+        <p style="color:var(--text);margin-bottom:0;">Explore a biome → hit an obstacle (a bug, a sealed gate, a broken NPC system) → open the diegetic Code Console built into the environment → write or edit a real JS snippet → BIT executes it live with immediate visual feedback → earn Compile Points (XP), Shards (currency), and Glyphs (skill points) → the world visibly changes → continue exploring.</p>
+      </div>
+
+      <div class="grid2 reveal">
+        <div class="card">
+          <h4>Secondary loops</h4>
+          <p style="font-size:14px;">Faction questing (Patchwork trust, Deprecated redemption), object/dialogue puzzles for NPC relationships, Memory Shard (JSON) lore collection, Blueprint Forge gear crafting via class instancing.</p>
+        </div>
+        <div class="card">
+          <h4>Endgame loop — "Refactor Mode"</h4>
+          <p style="font-size:14px;">New Game+ replays the campaign under constraints (fewer lines, lower time-complexity) for cosmetic rewards; weekly optimized-solution leaderboards; an optional roguelite "Null Expanse Depths" recombines puzzle modules procedurally for ongoing practice.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 6 ================= -->
+    <section class="doc" id="s6" data-act="3">
+      <div class="sec-head reveal">
+        <h2>06 · Quest Design</h2>
+        <p class="sub">Five quests spanning the full arc — each teaches a concept the story needs anyway.</p>
+      </div>
+
+      <div class="quest-card reveal" data-tier="Tutorial">
+        <h3>First Light</h3>
+        <p class="qsetup">Root Archive. ADA finds the player beside the dying heart-tree and teaches them to set the values that will relight it.</p>
+        <div class="qrow">
+          <div><div class="qlabel">Objectives</div><div class="qval">Set sunlight, water &amp; soil variables; write the first conditional to open the seed gate</div></div>
+          <div><div class="qlabel">Concepts taught</div><div class="qval">Variables, data types, conditionals</div></div>
+          <div><div class="qlabel">Rewards</div><div class="qval">BIT companion unlocked; Inscriber's Hand ability</div></div>
+          <div><div class="qlabel">Failure state</div><div class="qval">None punitive — ADA offers a hint after two failed attempts; pure encouragement loop</div></div>
+        </div>
+      </div>
+
+      <div class="quest-card reveal" data-tier="Early Game">
+        <h3>The Loop That Ate Yesterday</h3>
+        <p class="qsetup">The Long Loop. A camp of travelers is trapped reliving the same hour in an endless mirage.</p>
+        <div class="qrow">
+          <div><div class="qlabel">Objectives</div><div class="qval">Write a bounded loop with the correct exit condition to free them</div></div>
+          <div><div class="qlabel">Concepts taught</div><div class="qval">Loops, off-by-one debugging</div></div>
+          <div><div class="qlabel">Rewards</div><div class="qval">Long Loop fast-travel root; "Patient Iterator" skill point</div></div>
+          <div><div class="qlabel">Failure state</div><div class="qval">A miscounted loop briefly traps the player in a harmless, skippable mini replay — the lesson reinforces itself</div></div>
+        </div>
+      </div>
+
+      <div class="quest-card reveal" data-tier="Mid Game">
+        <h3>Warden Iyo's Trust</h3>
+        <p class="qsetup">Neonreach. The Patchwork need help cataloguing scavenged parts — and then defending their camp.</p>
+        <div class="qrow">
+          <div><div class="qlabel">Objectives</div><div class="qval">Build an object-based cataloguing tool; instantiate a class-based turret defense</div></div>
+          <div><div class="qlabel">Concepts taught</div><div class="qval">Objects, classes, instancing</div></div>
+          <div><div class="qlabel">Rewards</div><div class="qval">Patchwork faction unlocked; alternate crafting recipes; Iyo companion banter</div></div>
+          <div><div class="qlabel">Failure state</div><div class="qval">A malformed object makes the turret malfunction comically (confetti, not lasers) — fixable before camp takes cosmetic damage</div></div>
+        </div>
+      </div>
+
+      <div class="quest-card reveal" data-tier="Late Game">
+        <h3>The Shattered API</h3>
+        <p class="qsetup">A Neonreach datacenter heist to recover encrypted memory shards from corrupted Architect servers.</p>
+        <div class="qrow">
+          <div><div class="qlabel">Objectives</div><div class="qval">Use <code class="mono">fetch</code>/<code class="mono">async-await</code>, handle failures, parse JSON to rebuild a map fragment</div></div>
+          <div><div class="qlabel">Concepts taught</div><div class="qval">APIs, async/await, JSON, error handling</div></div>
+          <div><div class="qlabel">Rewards</div><div class="qval">Map to the Null Expanse; "Promise Keeper" passive skill</div></div>
+          <div><div class="qlabel">Failure state</div><div class="qval">An unhandled rejected fetch summons a Corrupted Response mini-boss that must be debugged under pressure</div></div>
+        </div>
+      </div>
+
+      <div class="quest-card reveal" data-tier="Final">
+        <h3>Compile or Delete</h3>
+        <p class="qsetup">The Null Expanse. The path to NULL's core runs through every structure vault in the game.</p>
+        <div class="qrow">
+          <div><div class="qlabel">Objectives</div><div class="qval">Clear algorithm/data-structure vaults; reach the core; choose a resolving function for the final fight</div></div>
+          <div><div class="qlabel">Concepts taught</div><div class="qval">Algorithms, data structures, optimization, design patterns — full synthesis</div></div>
+          <div><div class="qlabel">Rewards</div><div class="qval">One of three endings; Refactor Mode (NG+) unlock</div></div>
+          <div><div class="qlabel">Failure state</div><div class="qval">"Losing" deletes a small buffer of recent progress, not the run — true to a garbage-collection theme, not a death theme</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 7 ================= -->
+    <section class="doc" id="s7" data-act="3">
+      <div class="sec-head reveal">
+        <h2>07 · Puzzle Design</h2>
+        <p class="sub">30 puzzles across three families — write code, reason logically, or hunt a bug.</p>
+      </div>
+
+      <div class="ptabs reveal">
+        <button class="ptab active" data-cat="coding">Coding Puzzles (10)</button>
+        <button class="ptab" data-cat="logic">Logic Puzzles (10)</button>
+        <button class="ptab" data-cat="debug">Debugging Challenges (10)</button>
+      </div>
+
+      <div class="puzzle-grid reveal" id="puzzleGrid">
+        <!-- CODING -->
+        <div class="puzzle-card show" data-cat="coding"><div class="ptitle">Seed the Light</div><div class="pdiff">Beginner</div><p class="pmeta"><b>Solution:</b> declare &amp; assign variables to balance a brightness value</p><p class="pmeta"><b>Learning outcome:</b> variable declaration &amp; assignment</p></div>
+        <div class="puzzle-card" data-cat="coding"><div class="ptitle">Sort the Glyphs</div><div class="pdiff">Beginner</div><p class="pmeta"><b>Solution:</b> use <code class="mono">typeof</code> &amp; conditionals to route debris by type</p><p class="pmeta"><b>Learning outcome:</b> data types &amp; type-checking</p></div>
+        <div class="puzzle-card" data-cat="coding"><div class="ptitle">Echo Carver</div><div class="pdiff">Beginner</div><p class="pmeta"><b>Solution:</b> write one reusable function to carve five identical sigils</p><p class="pmeta"><b>Learning outcome:</b> functions, parameters, DRY reuse</p></div>
+        <div class="puzzle-card" data-cat="coding"><div class="ptitle">Bridge Logic</div><div class="pdiff">Beginner</div><p class="pmeta"><b>Solution:</b> <code class="mono">if / else if / else</code> chain choosing the right bridge per traveler</p><p class="pmeta"><b>Learning outcome:</b> conditional branching</p></div>
+        <div class="puzzle-card" data-cat="coding"><div class="ptitle">Escape the Loop</div><div class="pdiff">Beginner–Intermediate</div><p class="pmeta"><b>Solution:</b> a <code class="mono">for</code> loop with the correct exit bound</p><p class="pmeta"><b>Learning outcome:</b> loop syntax &amp; off-by-one errors</p></div>
+        <div class="puzzle-card" data-cat="coding"><div class="ptitle">Stack the Stones</div><div class="pdiff">Intermediate</div><p class="pmeta"><b>Solution:</b> <code class="mono">push / pop / sort</code> to reorder platforms ascending</p><p class="pmeta"><b>Learning outcome:</b> arrays &amp; array methods</p></div>
+        <div class="puzzle-card" data-cat="coding"><div class="ptitle">Build a Profile</div><div class="pdiff">Intermediate</div><p class="pmeta"><b>Solution:</b> construct an object literal with the required keys</p><p class="pmeta"><b>Learning outcome:</b> objects &amp; key-value pairs</p></div>
+        <div class="puzzle-card" data-cat="coding"><div class="ptitle">Forge a Blueprint</div><div class="pdiff">Intermediate</div><p class="pmeta"><b>Solution:</b> define a class, instantiate three turret objects from it</p><p class="pmeta"><b>Learning outcome:</b> classes &amp; instancing</p></div>
+        <div class="puzzle-card" data-cat="coding"><div class="ptitle">Tap the Datastream</div><div class="pdiff">Intermediate–Advanced</div><p class="pmeta"><b>Solution:</b> <code class="mono">async function</code> with <code class="mono">await</code> + <code class="mono">try/catch</code></p><p class="pmeta"><b>Learning outcome:</b> async/await &amp; error handling</p></div>
+        <div class="puzzle-card" data-cat="coding"><div class="ptitle">Binary Pathfinder</div><div class="pdiff">Advanced</div><p class="pmeta"><b>Solution:</b> implement binary search within a move budget</p><p class="pmeta"><b>Learning outcome:</b> algorithms &amp; Big-O thinking</p></div>
+
+        <!-- LOGIC -->
+        <div class="puzzle-card" data-cat="logic"><div class="ptitle">The Three Daemons</div><div class="pdiff">Beginner</div><p class="pmeta"><b>Solution:</b> classic truth-teller/liar deduction, reskinned</p><p class="pmeta"><b>Learning outcome:</b> boolean logic &amp; deduction</p></div>
+        <div class="puzzle-card" data-cat="logic"><div class="ptitle">Glyph Weights</div><div class="pdiff">Beginner</div><p class="pmeta"><b>Solution:</b> balance-scale comparisons isolate the one corrupted glyph</p><p class="pmeta"><b>Learning outcome:</b> comparison-operator intuition</p></div>
+        <div class="puzzle-card" data-cat="logic"><div class="ptitle">Pattern Roots</div><div class="pdiff">Beginner</div><p class="pmeta"><b>Solution:</b> extend a visual sequence of growing roots</p><p class="pmeta"><b>Learning outcome:</b> pattern recognition (pre-algorithmic thinking)</p></div>
+        <div class="puzzle-card" data-cat="logic"><div class="ptitle">The Locked Stack</div><div class="pdiff">Intermediate</div><p class="pmeta"><b>Solution:</b> move discs respecting "no larger on smaller" (Tower of Hanoi)</p><p class="pmeta"><b>Learning outcome:</b> stack constraints &amp; recursion intuition</p></div>
+        <div class="puzzle-card" data-cat="logic"><div class="ptitle">Order of Operations</div><div class="pdiff">Intermediate</div><p class="pmeta"><b>Solution:</b> arrange floating glyph-tiles to hit a target value</p><p class="pmeta"><b>Learning outcome:</b> operator precedence</p></div>
+        <div class="puzzle-card" data-cat="logic"><div class="ptitle">Maze of Branches</div><div class="pdiff">Intermediate</div><p class="pmeta"><b>Solution:</b> only paths matching a boolean expression are solid</p><p class="pmeta"><b>Learning outcome:</b> boolean expression evaluation</p></div>
+        <div class="puzzle-card" data-cat="logic"><div class="ptitle">The Sorting Choir</div><div class="pdiff">Intermediate</div><p class="pmeta"><b>Solution:</b> reorder singing statues using only adjacent swaps</p><p class="pmeta"><b>Learning outcome:</b> sorting-algorithm intuition</p></div>
+        <div class="puzzle-card" data-cat="logic"><div class="ptitle">Graph of Lanterns</div><div class="pdiff">Advanced</div><p class="pmeta"><b>Solution:</b> light every lantern crossing each bridge exactly once (Euler path)</p><p class="pmeta"><b>Learning outcome:</b> graph traversal intuition</p></div>
+        <div class="puzzle-card" data-cat="logic"><div class="ptitle">The Recursive Mirror Hall</div><div class="pdiff">Advanced</div><p class="pmeta"><b>Solution:</b> solve a smaller version of the same puzzle, nested four times</p><p class="pmeta"><b>Learning outcome:</b> recursion &amp; base cases</p></div>
+        <div class="puzzle-card" data-cat="logic"><div class="ptitle">Null's Riddle Lock</div><div class="pdiff">Advanced</div><p class="pmeta"><b>Solution:</b> a multi-clue constraint-satisfaction grid</p><p class="pmeta"><b>Learning outcome:</b> constraint satisfaction &amp; systematic elimination</p></div>
+
+        <!-- DEBUG -->
+        <div class="puzzle-card" data-cat="debug"><div class="ptitle">Off By One</div><div class="pdiff">Beginner</div><p class="pmeta"><b>Bug:</b> loop prints one item short — fix the boundary</p><p class="pmeta"><b>Learning outcome:</b> loop boundaries</p></div>
+        <div class="puzzle-card" data-cat="debug"><div class="ptitle">The Silent Typo</div><div class="pdiff">Beginner</div><p class="pmeta"><b>Bug:</b> a misspelled variable name returns <code class="mono">undefined</code></p><p class="pmeta"><b>Learning outcome:</b> naming, scope &amp; reference errors</p></div>
+        <div class="puzzle-card" data-cat="debug"><div class="ptitle">Wrong Branch</div><div class="pdiff">Beginner</div><p class="pmeta"><b>Bug:</b> <code class="mono">=</code> used where <code class="mono">===</code> was meant</p><p class="pmeta"><b>Learning outcome:</b> assignment vs. comparison</p></div>
+        <div class="puzzle-card" data-cat="debug"><div class="ptitle">Leaky Bucket</div><div class="pdiff">Intermediate</div><p class="pmeta"><b>Bug:</b> a function never <code class="mono">return</code>s, undefined cascades downstream</p><p class="pmeta"><b>Learning outcome:</b> return statements &amp; function output</p></div>
+        <div class="puzzle-card" data-cat="debug"><div class="ptitle">Shadowed Variable</div><div class="pdiff">Intermediate</div><p class="pmeta"><b>Bug:</b> an inner <code class="mono">let</code> shadows the outer value</p><p class="pmeta"><b>Learning outcome:</b> scope &amp; shadowing</p></div>
+        <div class="puzzle-card" data-cat="debug"><div class="ptitle">Mutated Original</div><div class="pdiff">Intermediate</div><p class="pmeta"><b>Bug:</b> an array passed by reference is mutated unexpectedly</p><p class="pmeta"><b>Learning outcome:</b> reference vs. value semantics</p></div>
+        <div class="puzzle-card" data-cat="debug"><div class="ptitle">The Race</div><div class="pdiff">Intermediate–Advanced</div><p class="pmeta"><b>Bug:</b> a value is read before its <code class="mono">await</code> resolves</p><p class="pmeta"><b>Learning outcome:</b> async timing &amp; race conditions</p></div>
+        <div class="puzzle-card" data-cat="debug"><div class="ptitle">Infinite Bloom</div><div class="pdiff">Advanced</div><p class="pmeta"><b>Bug:</b> a recursive function is missing its base case</p><p class="pmeta"><b>Learning outcome:</b> recursion base cases &amp; stack overflows</p></div>
+        <div class="puzzle-card" data-cat="debug"><div class="ptitle">Memory Leak Monster</div><div class="pdiff">Advanced</div><p class="pmeta"><b>Bug:</b> event listeners are never removed, lag compounds each tick</p><p class="pmeta"><b>Learning outcome:</b> memory management &amp; cleanup</p></div>
+        <div class="puzzle-card" data-cat="debug"><div class="ptitle">The Last Bug</div><div class="pdiff">Advanced · boss-gated</div><p class="pmeta"><b>Bug:</b> two or three earlier bug types combined in one function</p><p class="pmeta"><b>Learning outcome:</b> integrative debugging under pressure</p></div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 8 ================= -->
+    <section class="doc" id="s8" data-act="3">
+      <div class="sec-head reveal">
+        <h2>08 · Skill Tree</h2>
+        <p class="sub">Five branches, three tiers each, plus cross-branch "graft" nodes that reward mixing disciplines. Hover any node for its name.</p>
+      </div>
+
+      <div class="skilltree-wrap reveal">
+        <svg viewBox="-30 -10 960 400" role="img" aria-label="Skill tree diagram with five branches: Logic, Programming, Engineering, AI, and Security">
+          <!-- branch trunks -->
+          <line class="stlink" x1="110" y1="300" x2="110" y2="80" stroke="var(--act3)"/>
+          <line class="stlink" x1="290" y1="300" x2="290" y2="80" stroke="var(--act1)"/>
+          <line class="stlink" x1="470" y1="300" x2="470" y2="80" stroke="var(--act5)"/>
+          <line class="stlink" x1="650" y1="300" x2="650" y2="80" stroke="var(--act2)"/>
+          <line class="stlink" x1="830" y1="300" x2="830" y2="80" stroke="var(--act4)"/>
+          <!-- graft links (dashed) -->
+          <line class="stlink" x1="110" y1="190" x2="200" y2="135" stroke="var(--text-faint)" stroke-dasharray="3,3"/>
+          <line class="stlink" x1="290" y1="190" x2="200" y2="135" stroke="var(--text-faint)" stroke-dasharray="3,3"/>
+          <line class="stlink" x1="290" y1="190" x2="380" y2="135" stroke="var(--text-faint)" stroke-dasharray="3,3"/>
+          <line class="stlink" x1="470" y1="190" x2="380" y2="135" stroke="var(--text-faint)" stroke-dasharray="3,3"/>
+          <line class="stlink" x1="470" y1="190" x2="560" y2="135" stroke="var(--text-faint)" stroke-dasharray="3,3"/>
+          <line class="stlink" x1="650" y1="190" x2="560" y2="135" stroke="var(--text-faint)" stroke-dasharray="3,3"/>
+          <line class="stlink" x1="650" y1="190" x2="740" y2="135" stroke="var(--text-faint)" stroke-dasharray="3,3"/>
+          <line class="stlink" x1="830" y1="190" x2="740" y2="135" stroke="var(--text-faint)" stroke-dasharray="3,3"/>
+
+          <!-- column headers -->
+          <text x="110" y="335" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="var(--act3)" font-weight="600">LOGIC</text>
+          <text x="290" y="335" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="var(--act1)" font-weight="600">PROGRAMMING</text>
+          <text x="470" y="335" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="var(--act5)" font-weight="600">ENGINEERING</text>
+          <text x="650" y="335" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="var(--act2)" font-weight="600">AI</text>
+          <text x="830" y="335" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="var(--act4)" font-weight="600">SECURITY</text>
+
+          <!-- LOGIC -->
+          <g class="stnode"><circle cx="110" cy="300" r="7" stroke="var(--act3)"/><title>Boolean Logic — read truthy/falsy state</title><text x="110" y="318" text-anchor="middle">Boolean Logic</text></g>
+          <g class="stnode"><circle cx="110" cy="190" r="7" stroke="var(--act3)"/><title>Branch Mastery — nested conditionals</title><text x="110" y="208" text-anchor="middle">Branch Mastery</text></g>
+          <g class="stnode"><circle cx="110" cy="80" r="7" stroke="var(--act3)"/><title>Pattern Sense — spot logic shortcuts</title><text x="110" y="65" text-anchor="middle">Pattern Sense</text></g>
+
+          <!-- PROGRAMMING -->
+          <g class="stnode"><circle cx="290" cy="300" r="7" stroke="var(--act1)"/><title>Syntax Core — variables, types, basics</title><text x="290" y="318" text-anchor="middle">Syntax Core</text></g>
+          <g class="stnode"><circle cx="290" cy="190" r="7" stroke="var(--act1)"/><title>Function Composition — reusable logic</title><text x="290" y="208" text-anchor="middle">Functions+</text></g>
+          <g class="stnode"><circle cx="290" cy="80" r="7" stroke="var(--act1)"/><title>Async Fluency — promises &amp; await</title><text x="290" y="65" text-anchor="middle">Async Fluency</text></g>
+
+          <!-- ENGINEERING -->
+          <g class="stnode"><circle cx="470" cy="300" r="7" stroke="var(--act5)"/><title>Structures I — arrays, objects</title><text x="470" y="318" text-anchor="middle">Structures I</text></g>
+          <g class="stnode"><circle cx="470" cy="190" r="7" stroke="var(--act5)"/><title>Refactor Kit — cleaner rewrites</title><text x="470" y="208" text-anchor="middle">Refactor Kit</text></g>
+          <g class="stnode"><circle cx="470" cy="80" r="7" stroke="var(--act5)"/><title>Optimization Mastery — Big-O awareness</title><text x="470" y="65" text-anchor="middle">Optimization</text></g>
+
+          <!-- AI -->
+          <g class="stnode"><circle cx="650" cy="300" r="7" stroke="var(--act2)"/><title>Pattern Match — BIT learns your habits</title><text x="650" y="318" text-anchor="middle">Pattern Match</text></g>
+          <g class="stnode"><circle cx="650" cy="190" r="7" stroke="var(--act2)"/><title>Hint Scanner — scaffolded hints on request</title><text x="650" y="208" text-anchor="middle">Hint Scanner</text></g>
+          <g class="stnode"><circle cx="650" cy="80" r="7" stroke="var(--act2)"/><title>Predictive Companion — BIT anticipates bugs</title><text x="650" y="65" text-anchor="middle">Predictive AI</text></g>
+
+          <!-- SECURITY -->
+          <g class="stnode"><circle cx="830" cy="300" r="7" stroke="var(--act4)"/><title>Error Handling — try/catch fluency</title><text x="830" y="318" text-anchor="middle">Error Handling</text></g>
+          <g class="stnode"><circle cx="830" cy="190" r="7" stroke="var(--act4)"/><title>Validation Wards — input sanity checks</title><text x="830" y="208" text-anchor="middle">Validation</text></g>
+          <g class="stnode"><circle cx="830" cy="80" r="7" stroke="var(--act4)"/><title>Firewall Mastery — resist corruption damage</title><text x="830" y="65" text-anchor="middle">Firewall</text></g>
+
+          <!-- GRAFT NODES -->
+          <g class="stnode"><circle cx="200" cy="135" r="6" fill="var(--ink)" stroke="var(--text-dim)"/><title>Graft: Defensive Branching (Logic + Programming)</title><text x="200" y="123" text-anchor="middle" fill="var(--text-faint)">Defensive Branch</text></g>
+          <g class="stnode"><circle cx="380" cy="135" r="6" fill="var(--ink)" stroke="var(--text-dim)"/><title>Graft: Class Architect (Programming + Engineering)</title><text x="380" y="123" text-anchor="middle" fill="var(--text-faint)">Class Architect</text></g>
+          <g class="stnode"><circle cx="560" cy="135" r="6" fill="var(--ink)" stroke="var(--text-dim)"/><title>Graft: Heuristic Refactorer (Engineering + AI)</title><text x="560" y="123" text-anchor="middle" fill="var(--text-faint)">Heuristic Refactor</text></g>
+          <g class="stnode"><circle cx="740" cy="135" r="6" fill="var(--ink)" stroke="var(--text-dim)"/><title>Graft: Threat Pattern Sense (AI + Security)</title><text x="740" y="123" text-anchor="middle" fill="var(--text-faint)">Threat Sense</text></g>
+        </svg>
+        <div class="st-legend">
+          <span><i style="background:var(--act3)"></i>Logic</span>
+          <span><i style="background:var(--act1)"></i>Programming</span>
+          <span><i style="background:var(--act5)"></i>Engineering</span>
+          <span><i style="background:var(--act2)"></i>AI</span>
+          <span><i style="background:var(--act4)"></i>Security</span>
+          <span><i style="background:var(--text-faint)"></i>Graft node (needs both adjacent branches)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 9 ================= -->
+    <section class="doc" id="s9" data-act="3">
+      <div class="sec-head reveal">
+        <h2>09 · Game Economy</h2>
+        <p class="sub">Every economic action quietly reinforces a coding concept — even shopping is a lesson in passing arguments.</p>
+      </div>
+      <table class="doc-table reveal">
+        <tr><th style="width:20%">System</th><th>Design</th><th style="width:30%">Educational purpose</th></tr>
+        <tr><td><b class="lead">Currency — Shards</b></td><td>Soft currency earned from puzzles &amp; exploration; spent on cosmetics and crafting materials</td><td>Ties exploration reward directly to puzzle-solving, not grinding</td></tr>
+        <tr><td><b class="lead">XP — Compile Points</b></td><td>Levels the Runtime, unlocks skill-tree Glyphs (skill points)</td><td>Visible mastery curve mirrors a real learning curve</td></tr>
+        <tr><td><b class="lead">Unlockables</b></td><td>Runtime/BIT cosmetic skins, terminal "editor themes," lore shards</td><td>Low-stakes collection layer that never touches power balance</td></tr>
+        <tr><td><b class="lead">Crafting — Blueprint Forge</b></td><td>Define a class once, then instantiate gear by passing different constructor arguments for different stats</td><td>Reinforces OOP: one blueprint, many configured instances</td></tr>
+        <tr><td><b class="lead">Marketplace — Patchwork Bazaar</b></td><td>Trade Shards/materials with NPCs; cosmetic-only premium track ties in here</td><td>Object/parameter literacy disguised as "shopping"</td></tr>
+      </table>
+    </section>
+
+    <!-- ================= SECTION 10 ================= -->
+    <section class="doc" id="s10" data-act="4">
+      <span class="act-banner"><span class="num">IV</span> Act IV — The Trial</span>
+      <div class="sec-head reveal">
+        <h2>10 · Enemy Design</h2>
+        <p class="sub">Bugs as monsters — each one's weakness is its lesson.</p>
+      </div>
+
+      <div class="enemy-grid reveal">
+        <div class="enemy-card">
+          <span class="erole">Swarm · Common</span>
+          <h4>Syntax Bug</h4>
+          <dl>
+            <dt>Ability</dt><dd>Flickers and glitches in dense, undefendable swarms</dd>
+            <dt>Weakness</dt><dd>A quick bracket-matching prompt clears the whole group instantly</dd>
+            <dt>Lesson</dt><dd>Syntax correctness &amp; bracket matching</dd>
+          </dl>
+        </div>
+        <div class="enemy-card">
+          <span class="erole">Brute · Persistent</span>
+          <h4>Infinite Loop Beast</h4>
+          <dl>
+            <dt>Ability</dt><dd>Endlessly repeats one attack animation and never tires</dd>
+            <dt>Weakness</dt><dd>Interrupt it mid-fight with a correct exit-condition glyph — damage alone does nothing</dd>
+            <dt>Lesson</dt><dd>Loop termination conditions</dd>
+          </dl>
+        </div>
+        <div class="enemy-card">
+          <span class="erole">Stalker · Hidden</span>
+          <h4>Null Phantom</h4>
+          <dl>
+            <dt>Ability</dt><dd>Invisible until scanned; deals "undefined behavior" damage</dd>
+            <dt>Weakness</dt><dd>A quick <code class="mono">typeof</code> scan reveals its true form</dd>
+            <dt>Lesson</dt><dd><code class="mono">null</code> vs. <code class="mono">undefined</code> vs. falsy values</dd>
+          </dl>
+        </div>
+        <div class="enemy-card">
+          <span class="erole">Escalator · Endurance</span>
+          <h4>Memory Leak Monster</h4>
+          <dl>
+            <dt>Ability</dt><dd>Grows larger and slower to kill the longer the fight runs</dd>
+            <dt>Weakness</dt><dd>Periodic timed "free memory" inputs keep it from overwhelming the screen</dd>
+            <dt>Lesson</dt><dd>Garbage collection &amp; memory management</dd>
+          </dl>
+        </div>
+        <div class="enemy-card">
+          <span class="erole">Multiplier · Stackwell-exclusive</span>
+          <h4>Stack Overflow Wraith</h4>
+          <dl>
+            <dt>Ability</dt><dd>Spawns a copy of itself for every unanswered hit it lands</dd>
+            <dt>Weakness</dt><dd>A base-case strike stops the chain dead</dd>
+            <dt>Lesson</dt><dd>Recursion base cases</dd>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 11 ================= -->
+    <section class="doc" id="s11" data-act="4">
+      <div class="sec-head reveal">
+        <h2>11 · Boss Battles</h2>
+        <p class="sub">Five bosses, each a concept made physical. Hover or tap a card to see its mechanics.</p>
+      </div>
+
+      <div class="boss-grid reveal">
+        <div class="boss-card"><div class="boss-inner">
+          <div class="boss-face front">
+            <span class="bnum">BOSS I · ROOT ARCHIVE</span>
+            <h4>The Bracket Golem</h4>
+            <p class="bvisual">A hulking root-creature whose limbs are mismatched glyph-brackets — <code class="mono">{ [ (</code> — flexing open and never quite closing.</p>
+            <span class="flipcue">Hover for mechanics →</span>
+          </div>
+          <div class="boss-face back">
+            <span class="bnum">MECHANICS</span>
+            <p class="blesson">Parry to close its open brackets in the correct nested order. Close them wrong, and the limb regenerates.</p>
+            <p class="blesson"><b>Lesson:</b> bracket matching &amp; nesting/scope.</p>
+            <div class="phase-row"><span class="phase-pill">P1 · 1 bracket</span><span class="phase-pill">P2 · 2 nested</span><span class="phase-pill">P3 · 3 nested + feint</span></div>
+          </div>
+        </div></div>
+
+        <div class="boss-card"><div class="boss-inner">
+          <div class="boss-face front">
+            <span class="bnum">BOSS II · HOLLOW STACKWELL</span>
+            <h4>The Stack Warden</h4>
+            <p class="bvisual">A towering construct built from stacked platforms it hurls outward — then demands answer for, one by one.</p>
+            <span class="flipcue">Hover for mechanics →</span>
+          </div>
+          <div class="boss-face back">
+            <span class="bnum">MECHANICS</span>
+            <p class="blesson">Call thrown platforms back in the <strong>reverse</strong> order they were launched, or take self-damage from the mismatch.</p>
+            <p class="blesson"><b>Lesson:</b> stack (LIFO) behavior.</p>
+            <div class="phase-row"><span class="phase-pill">P1 · slow throws</span><span class="phase-pill">P2 · faster</span><span class="phase-pill">P3 · overflow dodge</span></div>
+          </div>
+        </div></div>
+
+        <div class="boss-card"><div class="boss-inner">
+          <div class="boss-face front">
+            <span class="bnum">BOSS III · NEONREACH</span>
+            <h4>The Object Sovereign</h4>
+            <p class="bvisual">A regal NPC-construct that reconfigures its own properties mid-fight, hiding its weak point behind whichever state it's currently wearing.</p>
+            <span class="flipcue">Hover for mechanics →</span>
+          </div>
+          <div class="boss-face back">
+            <span class="bnum">MECHANICS</span>
+            <p class="blesson">Read its live property readout and exploit the matching weakness; the final phase requires overriding a property via a quick code prompt.</p>
+            <p class="blesson"><b>Lesson:</b> object properties &amp; dynamic state inspection.</p>
+            <div class="phase-row"><span class="phase-pill">P1 · 1 property</span><span class="phase-pill">P2 · 2 properties</span><span class="phase-pill">P3 · override</span></div>
+          </div>
+        </div></div>
+
+        <div class="boss-card"><div class="boss-inner">
+          <div class="boss-face front">
+            <span class="bnum">BOSS IV · THE LONG LOOP</span>
+            <h4>The Loop Maw</h4>
+            <p class="bvisual">A sand-leviathan that repeats the same combo forever, never breaking rhythm, never tiring.</p>
+            <span class="flipcue">Hover for mechanics →</span>
+          </div>
+          <div class="boss-face back">
+            <span class="bnum">MECHANICS</span>
+            <p class="blesson">The loop only breaks if struck during a specific iteration-count window — the player must mentally track the count.</p>
+            <p class="blesson"><b>Lesson:</b> loop counters &amp; iteration tracking.</p>
+            <div class="phase-row"><span class="phase-pill">P1 · 4-hit combo</span><span class="phase-pill">P2 · 6-hit</span><span class="phase-pill">P3 · 8-hit</span></div>
+          </div>
+        </div></div>
+
+        <div class="boss-card"><div class="boss-inner">
+          <div class="boss-face front">
+            <span class="bnum">FINAL BOSS · NULL EXPANSE</span>
+            <h4>NULL</h4>
+            <p class="bvisual">A shifting geometric entity built from pure logic — calm, precise, and utterly convinced it is doing the right thing.</p>
+            <span class="flipcue">Hover for mechanics →</span>
+          </div>
+          <div class="boss-face back">
+            <span class="bnum">MECHANICS</span>
+            <p class="blesson">Synthesizes every prior lesson — bracket parries, stack timing, property exploits, loop counting — then ends with a "resolving function" choice that branches into the game's three endings.</p>
+            <p class="blesson"><b>Lesson:</b> full curriculum synthesis; thematic closure on deletion vs. refactoring.</p>
+            <div class="phase-row"><span class="phase-pill">P1–P3 · callbacks</span><span class="phase-pill">P4 · the choice</span></div>
+          </div>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 12 ================= -->
+    <section class="doc" id="s12" data-act="4">
+      <div class="sec-head reveal">
+        <h2>12 · UI/UX Design</h2>
+        <p class="sub">Diegetic where possible, minimal everywhere else — built for 2026's quieter, more adaptive HUD conventions.</p>
+      </div>
+      <table class="doc-table reveal">
+        <tr><th style="width:20%">Element</th><th>Design</th></tr>
+        <tr><td><b class="lead">HUD</b></td><td>Health is "Stack Integrity," XP is the "Compile Meter," both rendered as thin glowing bars that auto-fade to near-invisible during pure exploration (Journey-style restraint) and brighten only in danger or near interactables</td></tr>
+        <tr><td><b class="lead">Menus</b></td><td>Styled as an IDE sidebar with tabs — Quests, Glyphs (skills), Inventory, Bestiary ("Bug Log") — so navigating menus itself rehearses navigating a real code editor</td></tr>
+        <tr><td><b class="lead">Progress tracking</b></td><td>Per-biome "compiler core" completion rings on the world map; per-concept mastery bars in the Codex showing which CS topics are solid vs. shaky</td></tr>
+        <tr><td><b class="lead">Quest journal</b></td><td>Entries appear as code comments — <code class="mono">// restore the heart-tree's light value</code> — reinforcing comment-reading as a navigational habit</td></tr>
+        <tr><td><b class="lead">Skill tree UI</b></td><td>The literal branching diagram in §08, pinch-to-zoom on mobile, click/tap-to-preview on desktop before committing a Glyph</td></tr>
+        <tr><td><b class="lead">Inventory UI</b></td><td>A directory-style grid — <code class="mono">/inventory/gear/</code> — items are "files," stacks are "folders," reinforcing hierarchical thinking</td></tr>
+      </table>
+      <div class="grid3 reveal" style="margin-top:18px;">
+        <div class="card"><h4>Adaptive hints</h4><p style="font-size:13.5px;">An opt-in AI hint layer detects struggle patterns and offers scaffolded nudges, never full answers.</p></div>
+        <div class="card"><h4>Accessibility-first</h4><p style="font-size:13.5px;">Type/bracket glyphs are shape-coded as well as color-coded so colorblind players read every puzzle correctly.</p></div>
+        <div class="card"><h4>Minimal intrusion</h4><p style="font-size:13.5px;">HUD elements fade during pure traversal; nothing fights the environment for attention unless it matters right now.</p></div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 13 ================= -->
+    <section class="doc" id="s13" data-act="4">
+      <div class="sec-head reveal">
+        <h2>13 · Visual Direction</h2>
+        <p class="sub">"Bio-digital ruins" — one unified style fusing four references rather than four separate looks.</p>
+      </div>
+      <div class="card reveal" style="margin-bottom:18px;">
+        <p style="color:var(--text);margin-bottom:0;">Hand-painted organic texture (in the spirit of <em>Ori</em>) fused with crisp vector neon linework (<em>Cyberpunk 2077</em>), staged over silhouette-driven dark environments (<em>Hollow Knight</em>), under the vast, quiet skies of <em>Journey</em> and <em>Zelda</em>. The throughline: everything organic in Arborun has a circuit growing through it, and everything technological has gone slightly feral.</p>
+      </div>
+      <table class="doc-table reveal">
+        <tr><th style="width:20%">Element</th><th>Direction</th></tr>
+        <tr><td><b class="lead">Art style</b></td><td>Painterly organic surfaces + clean vector circuitry overlays; readable silhouettes at distance, intricate "circuit-vein" detail up close</td></tr>
+        <tr><td><b class="lead">Color palette</b></td><td>Five biome palettes (teal/Root Archive, violet/Stackwell, cyan-magenta/Neonreach, amber/Long Loop, crimson/Null Expanse) unified by a shared near-black base</td></tr>
+        <tr><td><b class="lead">Lighting</b></td><td>Bioluminescence as primary light source everywhere; volumetric fog in the Stackwell, neon signage glow in Neonreach, gold hour gradients in the Long Loop, cold strobing glitch-light in the Null Expanse</td></tr>
+        <tr><td><b class="lead">Environment style</b></td><td>Grown-not-built architecture; ruins read as collapsed trees as much as collapsed buildings</td></tr>
+        <tr><td><b class="lead">Character design</b></td><td>Simple, readable silhouettes (Journey-style) with glowing circuit-vein accents that carry expression (Ori-style) without needing faces</td></tr>
+      </table>
+    </section>
+
+    <!-- ================= SECTION 14 ================= -->
+    <section class="doc" id="s14" data-act="4">
+      <div class="sec-head reveal">
+        <h2>14 · Audio Design</h2>
+        <p class="sub">Sound that never shames a wrong answer — only ever rewards a right one.</p>
+      </div>
+      <div class="grid2 reveal">
+        <div class="card"><h4>Soundtrack</h4><p style="font-size:14px;">Adaptive layered score; electronic dissonance fades in as a region's corruption rises, organic instrumentation returns as it's repaired.</p></div>
+        <div class="card"><h4>Ambient sounds</h4><p style="font-size:14px;">Root creaks, distant data-chimes, wind through circuit-leaves — biome-specific ambience built from a shared sound-design vocabulary.</p></div>
+        <div class="card"><h4>Coding feedback</h4><p style="font-size:14px;">A satisfying, musical "compile chime" on success; a gentle, non-punishing blip on a syntax miss — never a harsh buzzer.</p></div>
+        <div class="card"><h4>Boss music</h4><p style="font-size:14px;">Live orchestral hybridized with glitch-electronic textures; themes mutate audibly as each boss phase escalates.</p></div>
+      </div>
+      <div class="card reveal" style="margin-top:16px;"><h4>Emotional moments</h4><p style="font-size:14px;margin-bottom:0;">Sparse solo piano and strings underscore ADA's reveal and BIT's possible memory-wipe moment — the score goes quiet exactly when the writing should speak for itself.</p></div>
+    </section>
+
+    <!-- ================= SECTION 15 ================= -->
+    <section class="doc" id="s15" data-act="4">
+      <div class="sec-head reveal">
+        <h2>15 · Multiplayer Features</h2>
+        <p class="sub">Optional, social, and built around the discipline coders actually practice in teams.</p>
+      </div>
+      <table class="doc-table reveal">
+        <tr><th style="width:24%">Feature</th><th>Design</th></tr>
+        <tr><td><b class="lead">Co-op coding missions</b></td><td>Literal pair programming — one player controls movement, the other writes the code, and they must communicate to solve it</td></tr>
+        <tr><td><b class="lead">Guilds — "Repositories"</b></td><td>Player clans share a collaborative skill-tree and tackle build challenges together</td></tr>
+        <tr><td><b class="lead">Shared puzzle solving</b></td><td>Rotating community "Merge Request" puzzles where top player solutions get featured in-game</td></tr>
+        <tr><td><b class="lead">Coding tournaments</b></td><td>Timed optimization tournaments rewarding the fastest <em>and</em> most efficient solutions, with seasonal "Hackathon" events</td></tr>
+      </table>
+    </section>
+
+    <!-- ================= SECTION 16 ================= -->
+    <section class="doc" id="s16" data-act="4">
+      <div class="sec-head reveal">
+        <h2>16 · Retention Systems</h2>
+        <p class="sub">Built to reward good code, not just logged-in hours.</p>
+      </div>
+      <div class="grid2 reveal">
+        <div class="card"><h4>Daily Compile</h4><p style="font-size:14px;">One small daily puzzle with a streak reward — low-commitment, high-consistency.</p></div>
+        <div class="card"><h4>Weekly events</h4><p style="font-size:14px;">Themed "bug invasions" temporarily reskin a biome around one concept under review.</p></div>
+        <div class="card"><h4>Achievements</h4><p style="font-size:14px;">Tied to real CS milestones — "Big-O Master," "Zero Console Errors," "Recursion Without Tears."</p></div>
+        <div class="card"><h4>Leaderboards</h4><p style="font-size:14px;">Ranked by efficiency — fewest lines, lowest complexity class — never by raw speed alone.</p></div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 17 ================= -->
+    <section class="doc" id="s17" data-act="4">
+      <div class="sec-head reveal">
+        <h2>17 · Monetization</h2>
+        <p class="sub">Ethical by design — every puzzle, biome, and lesson in the base game stays earnable through play alone.</p>
+      </div>
+      <table class="doc-table reveal">
+        <tr><th style="width:22%">Stream</th><th>Design</th></tr>
+        <tr><td><b class="lead">Cosmetics</b></td><td>Runtime &amp; BIT skins, terminal/editor themes, particle trail effects — zero gameplay impact</td></tr>
+        <tr><td><b class="lead">Expansions</b></td><td>Paid post-launch story biomes with new bosses, puzzles, and concepts (e.g. TypeScript-flavored "Strict Mode" expansion)</td></tr>
+        <tr><td><b class="lead">Battle pass</b></td><td>Seasonal cosmetic + lore track; no XP boosts, no power</td></tr>
+        <tr><td><b class="lead">Premium content</b></td><td>An optional "Mentor Pack" of extra hint and lesson depth, positioned for classrooms and self-learners as an educational add-on, not a power purchase</td></tr>
+      </table>
+      <div class="pull reveal">No XP boosts. No power purchases. Everything that makes you stronger is something you wrote yourself.</div>
+    </section>
+
+    <!-- ================= SECTION 18 ================= -->
+    <section class="doc" id="s18" data-act="5">
+      <span class="act-banner"><span class="num">V</span> Act V — The Build</span>
+      <div class="sec-head reveal">
+        <h2>18 · Technical Architecture</h2>
+        <p class="sub">The stack is JavaScript end-to-end — because the game teaching JavaScript should run on it too.</p>
+      </div>
+      <table class="doc-table reveal">
+        <tr><th style="width:20%">Layer</th><th>Choice</th><th style="width:34%">Why</th></tr>
+        <tr><td><b class="lead">Game engine</b></td><td>Custom layer over a 2D WebGL framework (Phaser 3 / PixiJS class)</td><td>JS/TS-native means the player's own sandboxed code can run inside the same runtime as the game itself — no translation layer between "what you wrote" and "what happens"</td></tr>
+        <tr><td><b class="lead">Frontend</b></td><td>TypeScript + WebGL canvas, wrapped via Capacitor (mobile) / Electron (desktop)</td><td>One codebase, three platforms, consistent with the taught language</td></tr>
+        <tr><td><b class="lead">Backend</b></td><td>Node.js + serverless functions</td><td>Cloud saves, leaderboards, matchmaking — same language fluency across the whole team</td></tr>
+        <tr><td><b class="lead">Database</b></td><td>PostgreSQL (relational quest/skill state) + Redis (session &amp; leaderboard caching)</td><td>Relational integrity where progress logic is complex; speed where reads must be instant</td></tr>
+        <tr><td><b class="lead">Multiplayer stack</b></td><td>WebSocket-based authoritative-lite relay (Colyseus-class)</td><td>Lightweight enough for 2-player pair-programming sync without full dedicated-server overhead</td></tr>
+        <tr><td><b class="lead">AI features</b></td><td>Lightweight rules + embedding model for adaptive, opt-in hinting</td><td>Detects struggle patterns without ever handing over the answer</td></tr>
+      </table>
+    </section>
+
+    <!-- ================= SECTION 19 ================= -->
+    <section class="doc" id="s19" data-act="5">
+      <div class="sec-head reveal">
+        <h2>19 · Development Roadmap</h2>
+        <p class="sub">18 months, five milestones, one biome at a time.</p>
+      </div>
+      <div class="timeline reveal">
+        <div class="tl-item"><span class="tl-when">Months 1–4 · MVP</span><h4>Root Archive playable</h4><p>Core code-console mechanic, BIT companion, the tutorial quest, and a Programming-only skill tree.</p></div>
+        <div class="tl-item"><span class="tl-when">Months 5–9 · Alpha</span><h4>Two more biomes, full tree</h4><p>Hollow Stackwell + Long Loop added, all five skill branches live, 15 puzzles, 2 bosses. Closed playtest with CS educators.</p></div>
+        <div class="tl-item"><span class="tl-when">Months 10–15 · Beta</span><h4>World complete</h4><p>Neonreach + Null Expanse added, all 30 puzzles and all 5 bosses live, multiplayer co-op MVP, cosmetic monetization. Open beta + classroom pilot program.</p></div>
+        <div class="tl-item"><span class="tl-when">Months 16–18 · Release</span><h4>Launch</h4><p>Full narrative with all three endings, complete audio pass, platform certification, accessibility pass, marketing launch.</p></div>
+        <div class="tl-item"><span class="tl-when">Month 19+ · Post-launch</span><h4>Live operations</h4><p>Seasonal content cadence, paid expansion biome(s), tournament infrastructure, stretch-goal educator dashboard.</p></div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 20 ================= -->
+    <section class="doc" id="s20" data-act="5">
+      <div class="sec-head reveal">
+        <h2>20 · Visual Assets</h2>
+        <p class="sub">Working mockups, not just descriptions. The skill tree (§08), world map (§03), and character sheets (§03) above are live diagrams — these two are new.</p>
+      </div>
+
+      <div class="mockup-tabs reveal">
+        <button class="ptab active" data-mock="menu">Main Menu Mockup</button>
+        <button class="ptab" data-mock="hud">HUD Wireframe</button>
+      </div>
+
+      <div class="reveal">
+        <div class="mockup-frame show" data-mock="menu">
+          <div class="mm">
+            <div class="mmlogo">ROOTCODE</div>
+            <div class="mmsub">COMPILE THE WORLD · AWAKEN THE ROOTS</div>
+            <div class="mmbtn primary">Continue — Root Archive, 41% restored</div>
+            <div class="mmbtn">New Runtime</div>
+            <div class="mmbtn">Codex &amp; Skill Tree</div>
+            <div class="mmbtn">Repositories (Multiplayer)</div>
+            <div class="mmbtn">Settings</div>
+          </div>
+        </div>
+        <div class="mockup-frame" data-mock="hud">
+          <div class="hud">
+            <div class="h-topleft">
+              <div class="h-bar-label">Stack Integrity</div>
+              <div class="h-bar"><i style="width:78%;background:var(--act1);"></i></div>
+              <div class="h-bar-label">Compile Meter</div>
+              <div class="h-bar"><i style="width:46%;background:var(--act3);"></i></div>
+            </div>
+            <div class="h-minimap"></div>
+            <div class="h-bottom">
+              <div class="h-console">&gt; <span style="color:var(--text)">if (lightLevel</span><span style="opacity:.4">_</span></div>
+              <div class="h-glyphs"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 21 ================= -->
+    <section class="doc" id="s21" data-act="5">
+      <div class="sec-head reveal">
+        <h2>21 · Risk Analysis</h2>
+        <p class="sub">Named early, mitigated by design — not by hope.</p>
+      </div>
+      <div class="reveal">
+        <div class="risk-card"><span class="rtype">Educational risk</span><h4>Mixed-skill players hit puzzles too easy or too hard</h4><div class="mit"><b>Mitigation</b><br>Adaptive opt-in hint layer plus difficulty-banded optional puzzle variants, validated through educator pilot testing pre-launch.</div></div>
+        <div class="risk-card"><span class="rtype">Technical risk</span><h4>Safely sandboxing player-written JavaScript</h4><div class="mit"><b>Mitigation</b><br>A vetted, Worker-isolated restricted JS subset with strict execution-time and loop-iteration limits, so no player code can affect performance or security outside its sandbox.</div></div>
+        <div class="risk-card"><span class="rtype">Design risk</span><h4>Narrative and lesson feeling bolted together ("edutainment tax")</h4><div class="mit"><b>Mitigation</b><br>Every mechanic must be diegetically justified before it ships; playtests measure both fun-rating and concept-retention side by side, not separately.</div></div>
+        <div class="risk-card"><span class="rtype">Business risk</span><h4>Narrow overlap between "gamers" and "learners" audiences</h4><div class="mit"><b>Mitigation</b><br>Dual-channel marketing across Steam and edtech/educator channels, plus a free Root Archive demo that functions as both marketing tool and classroom trial.</div></div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 22 ================= -->
+    <section class="doc" id="s22" data-act="5">
+      <div class="sec-head reveal">
+        <h2>22 · Final Deliverable</h2>
+        <p class="sub">This document is the complete Game Design Document. The checklists below turn it into a production plan.</p>
+      </div>
+
+      <div class="checklist-grid reveal">
+        <div class="checklist"><h4>Development</h4><ul>
+          <li>Sandboxed JS interpreter validated</li>
+          <li>Core console mechanic prototyped</li>
+          <li>5 biomes blocked out</li>
+          <li>Skill tree systems wired</li>
+          <li>Multiplayer relay stress-tested</li>
+        </ul></div>
+        <div class="checklist"><h4>Asset</h4><ul>
+          <li>5 biome palettes locked</li>
+          <li>Character silhouettes approved</li>
+          <li>30 puzzle environments built</li>
+          <li>5 boss arenas built</li>
+          <li>Adaptive score layers recorded</li>
+        </ul></div>
+        <div class="checklist"><h4>UI</h4><ul>
+          <li>Diegetic HUD implemented</li>
+          <li>Codex / quest journal wired</li>
+          <li>Skill tree UI (mobile + desktop)</li>
+          <li>Colorblind-safe glyph shapes</li>
+          <li>Adaptive hint toggle</li>
+        </ul></div>
+        <div class="checklist"><h4>Story</h4><ul>
+          <li>5 main quests scripted</li>
+          <li>5 character arcs scripted</li>
+          <li>3 endings scripted &amp; tested</li>
+          <li>Faction reputation system tuned</li>
+          <li>Vex redemption arc validated</li>
+        </ul></div>
+        <div class="checklist"><h4>Marketing</h4><ul>
+          <li>Steam page + demo live</li>
+          <li>Educator/edtech outreach plan</li>
+          <li>Trailer (hero animation reused)</li>
+          <li>Press kit with biome art</li>
+          <li>Influencer / classroom seeding</li>
+        </ul></div>
+        <div class="checklist"><h4>Launch</h4><ul>
+          <li>Platform certification (PC/mobile)</li>
+          <li>Accessibility pass complete</li>
+          <li>Leaderboard infra live</li>
+          <li>Day-1 patch plan ready</li>
+          <li>Post-launch roadmap published</li>
+        </ul></div>
+      </div>
+    </section>
+
+    </div><!-- /content-col -->
+  </main>
+</div><!-- /shell -->
+
+<div id="hamburger" aria-label="Open section menu" role="button" tabindex="0">
+  <span></span><span></span><span></span>
 </div>
 
+<div id="mobileOverlay">
+  <div class="close-x" id="closeOverlay">✕</div>
+  <div class="nav-brand"><span class="dot"></span>ROOTCODE — GDD</div>
+  <div id="mobileNavList"></div>
+</div>
+
+<footer style="border-top:1px solid var(--line);padding:50px 28px 70px;text-align:center;position:relative;z-index:1;">
+  <div class="nav-brand" style="justify-content:center;font-size:15px;"><span class="dot"></span>ROOTCODE</div>
+  <p style="font-size:13px;color:var(--text-faint);margin:14px 0 4px;">Game Design Document — 22 sections, one world, one language.</p>
+  <p style="font-size:13px;color:var(--text-faint);margin:0;">Designed &amp; documented by <a href="https://www.thenuxofc.store" target="_blank" rel="noopener" style="color:var(--act1);text-decoration:none;border-bottom:1px dotted rgba(77,255,200,.4);">THENUX</a> — <a href="https://www.thenuxofc.store" target="_blank" rel="noopener" style="color:var(--text-faint);">www.thenuxofc.store</a></p>
+</footer>
+
+<style>
+/* ============ MOBILE OVERRIDES ============ */
+@media (max-width: 880px){
+  #rootnav{display:none;}
+  #progressBar{display:block;}
+  #hamburger{display:flex;}
+  main{padding:0 18px 100px;}
+  .hero{padding:100px 18px 60px;}
+  .char-card{padding:18px 20px;}
+  .qrow{gap:14px;}
+}
+@media (max-width: 600px){
+  .boss-card{height:340px;}
+  .hud{height:260px;}
+}
+</style>
+
 <script>
-/* ---------- LEVEL DATA ---------- */
-const DIR = {N:[-1,0],E:[0,1],S:[1,0],W:[0,-1]};
-const TURN_R = {N:'E',E:'S',S:'W',W:'N'};
-const TURN_L = {N:'W',W:'S',S:'E',E:'N'};
-const FACE_ARROW = {N:'▲',E:'▶',S:'▼',W:'◀'};
+(function(){
 
-const levels = [
-  { // 0: sequencing
-    name:'I. The Locked Gate',
-    concept:'Sequencing',
-    grid:[
-      "S....",
-      "###.#",
-      "....D"
-    ],
-    start:{r:0,c:0,f:'E'},
-    maxBlocks:8,
-    palette:['forward','turnLeft','turnRight'],
-    intro:`<p>The first gate of Gearford stands sealed behind a maze of brass walls. The instruction-wheel only understands one thing at a time: <strong>move forward</strong>, or <strong>turn</strong>. Build a sequence of commands &mdash; in order &mdash; to walk your Mender to the glowing door.</p>`,
-    success:`<p class="success">The gate sighs open on rusted hinges. <em>"One step follows another,"</em> the old stonework seems to say. <em>"That is the first law of the Engine: sequence."</em></p>`,
-    fail:`<p class="fail">CLANG. The Mender walks straight into solid brass and stumbles back. The wall hasn't moved &mdash; perhaps the plan needs to.</p>`,
-  },
-  { // 1: loops
-    name:'II. The Gear Vault',
-    concept:'Loops',
-    grid:["S***D"],
-    start:{r:0,c:0,f:'E'},
-    maxBlocks:5,
-    repeatCount:3,
-    palette:['forward','collect','repeatStart','repeatEnd'],
-    intro:`<p>Three loose gears lie scattered down the vault corridor. You could march forward and collect each one by hand &mdash; but the old instruction-wheel only has room for <strong>5 commands</strong> this time, and writing it out by hand would take seven. Use <strong>Repeat</strong> to do the same two steps three times over, then walk the last stretch to the door.</p>`,
-    success:`<p class="success">The gears click into the wall sockets and the vault door grinds upward. <em>"Why write the same step four times,"</em> hums the Engine, <em>"when you can teach it to repeat itself?"</em></p>`,
-    fail:`<p class="fail">The Mender runs out of road &mdash; or out of gears. Check whether your loop repeats the right number of times.</p>`,
-  },
-  { // 2: conditionals + loops
-    name:'III. The Broken Bridge',
-    concept:'Conditionals',
-    grid:["S..G.G.D"],
-    start:{r:0,c:0,f:'E'},
-    maxBlocks:6,
-    palette:['repeatStart','repeatEnd','ifGapStart','ifElse','ifEnd','forward','jump'],
-    intro:`<p>The bridge ahead is missing planks &mdash; gaps where the brass floor has rusted through. Walking forward into a gap means falling. Use <strong>If gap ahead</strong> to decide, on the fly, whether to <strong>jump</strong> or simply <strong>walk forward</strong> &mdash; then wrap it in a loop so the Mender checks every single step.</p>`,
-    success:`<p class="success">Step by step, the Mender reads the floor ahead and reacts &mdash; jump, walk, jump, walk &mdash; until solid ground meets the far door. <em>"A program that only ever does one thing is brittle,"</em> the Engine notes. <em>"A program that can choose is alive."</em></p>`,
-    fail:`<p class="fail">A plank gives way with a groan of metal, and the Mender drops through into the dark below. The bridge demands a choice at every gap, not a guess.</p>`,
-  },
-  { // 3: variables + functions
-    name:'IV. The Spark Chamber',
-    concept:'Variables & Functions',
-    grid:["S*.*.*D"],
-    start:{r:0,c:0,f:'E'},
-    maxBlocks:8,
-    sparksNeeded:3,
-    palette:['forward','callActivate'],
-    intro:`<p>The final door is locked by an old ward: it will only open once the Engine senses <strong>3 sparks</strong> of charge. Three broken gears sit along the chamber floor. Rather than write out "reach in, twist, seal" by hand each time, the instruction-wheel offers a ready-made <strong>function</strong> &mdash; <code>Activate Gear()</code> &mdash; that does all three steps and raises the spark count by one. Call it wherever you stand on a gear.</p>`,
-    success:`<p class="success">Spark by spark, the chamber brightens. The final door swings wide on a current of golden light. <em>"A name you can call again and again,"</em> the Engine whispers, fading, <em>"is worth more than a thousand repeated instructions. You have learned to mend me. Go well, Mender of Gearford."</em></p>`,
-    fail:`<p class="fail">The door stays cold and dark. The Engine needs three sparks &mdash; have you activated enough gears before reaching it?</p>`,
-  },
-];
+  /* ---------- DATA ---------- */
+  var sections = [
+    {id:'s1', n:'01', t:'Executive Summary', act:1},
+    {id:'s2', n:'02', t:'Game Vision', act:1},
+    {id:'s3', n:'03', t:'Story & Worldbuilding', act:2},
+    {id:'s4', n:'04', t:'Coding Learning System', act:3},
+    {id:'s5', n:'05', t:'Core Gameplay Loop', act:3},
+    {id:'s6', n:'06', t:'Quest Design', act:3},
+    {id:'s7', n:'07', t:'Puzzle Design', act:3},
+    {id:'s8', n:'08', t:'Skill Tree', act:3},
+    {id:'s9', n:'09', t:'Game Economy', act:3},
+    {id:'s10',n:'10', t:'Enemy Design', act:4},
+    {id:'s11',n:'11', t:'Boss Battles', act:4},
+    {id:'s12',n:'12', t:'UI/UX Design', act:4},
+    {id:'s13',n:'13', t:'Visual Direction', act:4},
+    {id:'s14',n:'14', t:'Audio Design', act:4},
+    {id:'s15',n:'15', t:'Multiplayer Features', act:4},
+    {id:'s16',n:'16', t:'Retention Systems', act:4},
+    {id:'s17',n:'17', t:'Monetization', act:4},
+    {id:'s18',n:'18', t:'Technical Architecture', act:5},
+    {id:'s19',n:'19', t:'Development Roadmap', act:5},
+    {id:'s20',n:'20', t:'Visual Assets', act:5},
+    {id:'s21',n:'21', t:'Risk Analysis', act:5},
+    {id:'s22',n:'22', t:'Final Deliverable', act:5}
+  ];
+  var actMeta = {
+    1:{label:'Act I — The Seed',     color:'var(--act1)'},
+    2:{label:'Act II — The Lore',    color:'var(--act2)'},
+    3:{label:'Act III — The System', color:'var(--act3)'},
+    4:{label:'Act IV — The Trial',   color:'var(--act4)'},
+    5:{label:'Act V — The Build',    color:'var(--act5)'}
+  };
+  var biomes = [
+    {n:'01', name:'The Root Archive',   x:90,  y:170, color:'var(--act1)', blurb:'Bioluminescent tutorial forest. Teaches variables, types, functions, conditionals, loops.'},
+    {n:'02', name:'The Hollow Stackwell', x:270, y:80, color:'var(--act2)', blurb:'A vertical ruin shaped like a literal call stack. Teaches arrays & stack behavior.'},
+    {n:'03', name:'Neonreach',          x:450, y:185, color:'var(--act3)', blurb:'The ruined Architect capital, lit by neon datastreams. Teaches objects, classes, APIs, JSON.'},
+    {n:'04', name:'The Long Loop',      x:630, y:75,  color:'var(--act5)', blurb:'An endless dune of mirage loops. Teaches iteration and exit conditions.'},
+    {n:'05', name:'The Null Expanse',   x:810, y:175, color:'var(--act4)', blurb:'The corrupted void at the world\'s core. Teaches algorithms, data structures, optimization.'}
+  ];
 
-// fix level2 grid string array properly (was placeholder)
-levels[1].grid = ["S*.*.*D"]; // S,*,.,*,.,*,D -> repeat2{forward,collect} won't fit budget4 well; redesign below
-// Final, verified grid for level 2 (index1): S * . * D over 5 cols, repeat2{forward,collect} then forward = 3 blocks <=4
-levels[1].grid = ["S*.*D"];
-
-const BLOCK_LABELS = {
-  forward:{label:'Forward', kw:'forward()'},
-  turnLeft:{label:'Turn Left', kw:'turnLeft()'},
-  turnRight:{label:'Turn Right', kw:'turnRight()'},
-  collect:{label:'Collect', kw:'collect()'},
-  jump:{label:'Jump Gap', kw:'jump()'},
-  callActivate:{label:'Call: Activate Gear()', kw:'activateGear()'},
-  repeatStart:{label:'Repeat 2 { ', kw:'repeat (2) {'},
-  repeatEnd:{label:'} End Repeat', kw:'}'},
-  ifGapStart:{label:'If Gap Ahead {', kw:'if (gapAhead) {'},
-  ifElse:{label:'} Else {', kw:'} else {'},
-  ifEnd:{label:'} End If', kw:'}'},
-};
-
-/* ---------- STATE ---------- */
-let curLevel = 0;
-let program = []; // flat list of tokens (we use a simple flat structure with explicit start/end markers)
-let mender = {r:0,c:0,f:'E'};
-let collected = new Set();
-let sparks = 0;
-let running = false;
-
-function $(id){return document.getElementById(id);}
-
-function startGame(){
-  $('introCard').style.display='none';
-  $('gameArea').style.display='block';
-  buildGearRing();
-  loadLevel(0);
-}
-
-function buildGearRing(){
-  const ring = $('gearring');
-  ring.innerHTML = levels.map((lv,i)=>`
-    <div class="gear-slot" id="gs${i}">
-      <svg class="gear" viewBox="0 0 40 40"><g class="cog">
-        <circle cx="20" cy="20" r="11"/>
-        ${Array.from({length:8}).map((_,t)=>{
-          const a = t*45*Math.PI/180;
-          const x = 20+Math.cos(a)*15, y=20+Math.sin(a)*15;
-          return `<rect x="${x-2.5}" y="${y-2.5}" width="5" height="5" transform="rotate(${t*45} ${x} ${y})"/>`;
-        }).join('')}
-      </g></svg>
-      <div class="label">${i+1}</div>
-    </div>`).join('');
-}
-
-function updateGearRing(){
-  levels.forEach((lv,i)=>{
-    const el = $('gs'+i);
-    el.classList.toggle('active', i===curLevel);
-    el.classList.toggle('done', i<curLevel || (i===curLevel && levelComplete));
-  });
-}
-
-let levelComplete=false;
-
-function loadLevel(i){
-  curLevel=i;
-  levelComplete=false;
-  const lv = levels[i];
-  mender = {r:lv.start.r,c:lv.start.c,f:lv.start.f};
-  collected = new Set();
-  sparks = 0;
-  program = [];
-  $('nextWrap').style.display='none';
-  $('storyTitle').textContent = lv.name;
-  $('storyText').innerHTML = `<span class="concept-tag">${lv.concept}</span>` + lv.intro;
-  $('codeTitle').textContent = 'Your Program';
-  renderPalette();
-  renderProgram();
-  renderGrid();
-  renderSparkRow();
-  updateGearRing();
-  $('hint').textContent = '';
-  $('runBtn').disabled=false;
-}
-
-function renderPalette(){
-  const lv = levels[curLevel];
-  const pal = $('palette');
-  pal.innerHTML = lv.palette.map(key=>{
-    const b = BLOCK_LABELS[key];
-    const accent = (key.startsWith('repeat')||key.startsWith('if'))?'accent':'';
-    return `<button class="block-btn ${accent}" onclick="addBlock('${key}')">${b.label}</button>`;
-  }).join('');
-  $('budget').innerHTML = `Command budget: <b>${program.length}</b> / ${lv.maxBlocks}`;
-}
-
-/* program is a flat array; nesting is implied by start/end tokens, matched via simple stack rules for rendering & execution */
-function addBlock(key){
-  const lv = levels[curLevel];
-  if(program.length >= lv.maxBlocks){return;}
-  // enforce simple grammar: ifElse only valid if there's an open ifGapStart without its ifElse yet; ends only valid if matching open
-  program.push(key);
-  renderProgram();
-  $('budget').innerHTML = `Command budget: <b>${program.length}</b> / ${lv.maxBlocks}`;
-}
-
-function undoBlock(){
-  program.pop();
-  renderProgram();
-  $('budget').innerHTML = `Command budget: <b>${program.length}</b> / ${levels[curLevel].maxBlocks}`;
-}
-function resetProgram(){
-  program=[];
-  renderProgram();
-  mender = {r:levels[curLevel].start.r,c:levels[curLevel].start.c,f:levels[curLevel].start.f};
-  collected = new Set();
-  sparks=0;
-  renderGrid();
-  renderSparkRow();
-  $('budget').innerHTML = `Command budget: <b>0</b> / ${levels[curLevel].maxBlocks}`;
-  $('hint').textContent='';
-}
-
-function renderProgram(){
-  const view = $('programView');
-  if(program.length===0){view.innerHTML='<span class="empty">// no commands yet</span>';return;}
-  let indent=0;
-  let html='';
-  program.forEach((key,idx)=>{
-    const b = BLOCK_LABELS[key];
-    if(key==='repeatEnd'||key==='ifEnd'||key==='ifElse'){indent=Math.max(0,indent-1);}
-    const cls = indent===0?'':(indent===1?'indent1':'indent2');
-    const kwClass = (key.startsWith('repeat')||key.startsWith('if'))?'kw2':'kw';
-    html += `<div class="pline ${cls}" data-i="${idx}"><span class="${kwClass}">${b.kw}</span></div>`;
-    if(key==='repeatStart'||key==='ifGapStart'||key==='ifElse'){indent++;}
-  });
-  view.innerHTML = html;
-}
-
-/* ---------- GRID RENDER ---------- */
-function parseGrid(strs){
-  return strs.map(row=>row.split(''));
-}
-function renderGrid(){
-  const lv = levels[curLevel];
-  const g = parseGrid(lv.grid);
-  const rows = g.length, cols = g[0].length;
-  const grid = $('grid');
-  grid.style.gridTemplateColumns = `repeat(${cols}, 42px)`;
-  let html='';
-  for(let r=0;r<rows;r++){
-    for(let c=0;c<cols;c++){
-      const ch = g[r][c];
-      let cls='cell', content='';
-      if(ch==='#'){cls+=' wall';}
-      else if(ch==='G'){cls+=' gap';content='≈';}
-      else if(ch==='*'){
-        cls+=' gear';
-        const taken = collected.has(r+','+c);
-        if(taken) cls+=' taken';
-        content = taken?'○':'⚙';
-      } else if(ch==='D'){
-        const locked = lv.sparksNeeded && sparks<lv.sparksNeeded;
-        cls+= locked?' door locked':' door';
-        content = locked?'▣':'▣';
+  /* ---------- BUILD NAV LISTS ---------- */
+  function buildNav(container, isMobile){
+    var html = '';
+    if(isMobile){
+      html += '<div class="nav-brand"><span class="dot"></span>Jump to a section</div>';
+    }
+    var currentAct = null;
+    sections.forEach(function(s){
+      if(s.act !== currentAct){
+        currentAct = s.act;
+        html += '<div class="nav-act-label">'+actMeta[s.act].label+'</div>';
       }
-      const isMender = mender.r===r && mender.c===c;
-      html += `<div class="${cls}" id="cell-${r}-${c}">${content}${isMender?`<span class="mender">${FACE_ARROW[mender.f]}</span>`:''}</div>`;
+      html += '<a class="nav-link" data-target="'+s.id+'" href="#'+s.id+'"><b>'+s.n+'</b>'+s.t+'</a>';
+    });
+    container.innerHTML = html;
+  }
+  var navList = document.getElementById('navList');
+  var mobileNavList = document.getElementById('mobileNavList');
+  if(navList) buildNav(navList, false);
+  if(mobileNavList) buildNav(mobileNavList, true);
+
+  /* ---------- HERO TITLE LETTER-IN ---------- */
+  var heroTitle = document.getElementById('heroTitle');
+  if(heroTitle){
+    var txt = heroTitle.textContent;
+    heroTitle.textContent = '';
+    txt.split('').forEach(function(ch, i){
+      var span = document.createElement('span');
+      span.textContent = ch;
+      span.style.animationDelay = (i*0.07)+'s';
+      heroTitle.appendChild(span);
+    });
+  }
+
+  /* ---------- HERO MOTES ---------- */
+  var motesWrap = document.getElementById('motes');
+  if(motesWrap){
+    for(var i=0;i<22;i++){
+      var m = document.createElement('div');
+      m.className = 'mote';
+      var size = 2 + Math.random()*3;
+      m.style.width = size+'px';
+      m.style.height = size+'px';
+      m.style.left = (Math.random()*100)+'%';
+      m.style.top = (40+Math.random()*55)+'%';
+      m.style.animationDelay = (Math.random()*9)+'s';
+      m.style.animationDuration = (7+Math.random()*6)+'s';
+      motesWrap.appendChild(m);
     }
   }
-  grid.innerHTML = html;
-}
 
-function renderSparkRow(){
-  const lv = levels[curLevel];
-  const row = $('sparkRow');
-  if(!lv.sparksNeeded){row.style.display='none';return;}
-  row.style.display='flex';
-  let dots='';
-  for(let i=0;i<lv.sparksNeeded;i++){
-    dots += `<span class="spark-dot ${i<sparks?'lit':''}"></span>`;
+  /* ---------- WORLD MAP ---------- */
+  var mapMount = document.getElementById('worldmapMount');
+  if(mapMount){
+    var pathD = 'M'+biomes.map(function(b){return b.x+','+b.y;}).join(' L');
+    var nodesSvg = biomes.map(function(b){
+      return '<g class="biome-node" data-name="'+b.name+'" data-blurb="'+b.blurb+'">'+
+        '<circle class="outer" cx="'+b.x+'" cy="'+b.y+'" r="22" fill="none" stroke="'+b.color+'" stroke-width="1.4" opacity=".55"/>'+
+        '<circle cx="'+b.x+'" cy="'+b.y+'" r="9" fill="'+b.color+'"/>'+
+        '<text class="bnum" x="'+b.x+'" y="'+(b.y-32)+'" text-anchor="middle">'+b.n+'</text>'+
+        '<text class="bname" x="'+b.x+'" y="'+(b.y+ (b.y<130?48:48) )+'" text-anchor="middle">'+b.name+'</text>'+
+      '</g>';
+    }).join('');
+    mapMount.innerHTML =
+      '<div class="worldmap-outer">'+
+        '<div class="worldmap-wrap">'+
+          '<svg viewBox="0 0 900 260" role="img" aria-label="Map of the five biomes of Arborun">'+
+            '<path d="'+pathD+'" fill="none" stroke="var(--line-bright)" stroke-width="1.6" stroke-dasharray="2,5"/>'+
+            nodesSvg+
+          '</svg>'+
+        '</div>'+
+        '<div class="biome-tip" id="biomeTip"></div>'+
+      '</div>';
+
+    var tip = document.getElementById('biomeTip');
+    var outer = mapMount.querySelector('.worldmap-outer');
+    mapMount.querySelectorAll('.biome-node').forEach(function(node){
+      node.addEventListener('mouseenter', function(){
+        tip.innerHTML = '<strong style="color:var(--text)">'+node.dataset.name+'</strong><br>'+node.dataset.blurb;
+        tip.style.opacity = '1';
+      });
+      node.addEventListener('mousemove', function(e){
+        var rect = outer.getBoundingClientRect();
+        var x = e.clientX - rect.left + 14;
+        var y = e.clientY - rect.top + 14;
+        tip.style.left = Math.min(x, rect.width-240)+'px';
+        tip.style.top = y+'px';
+      });
+      node.addEventListener('mouseleave', function(){ tip.style.opacity = '0'; });
+    });
   }
-  row.innerHTML = `Sparks ${dots}`;
-}
 
-/* ---------- EXECUTION ---------- */
-function sleep(ms){return new Promise(res=>setTimeout(res,ms));}
+  /* ---------- REVEAL ON SCROLL ---------- */
+  var revealEls = document.querySelectorAll('.reveal');
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, {threshold:0.12, rootMargin:'0px 0px -40px 0px'});
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
+    revealEls.forEach(function(el){ el.classList.add('in'); });
+  }
 
-function gridChar(r,c){
-  const lv = levels[curLevel];
-  const g = parseGrid(lv.grid);
-  if(r<0||c<0||r>=g.length||c>=g[0].length) return '#';
-  return g[r][c];
-}
+  /* ---------- ACTIVE SECTION TRACKING ---------- */
+  var sectionEls = sections.map(function(s){ return document.getElementById(s.id); }).filter(Boolean);
+  var navLinks = document.querySelectorAll('.nav-link');
+  var rootNav = document.getElementById('rootnav');
+  var activeId = 's1';
+  if('IntersectionObserver' in window){
+    var secIO = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){
+          activeId = en.target.id;
+          var s = sections.find(function(x){ return x.id===activeId; });
+          if(s){
+            document.documentElement.style.setProperty('--current-accent', actMeta[s.act].color);
+            if(rootNav) rootNav.style.setProperty('--accent', actMeta[s.act].color);
+            var pb = document.getElementById('progressBar');
+            if(pb) pb.style.background = actMeta[s.act].color;
+          }
+          navLinks.forEach(function(l){
+            l.classList.toggle('active', l.dataset.target===activeId);
+          });
+        }
+      });
+    }, {threshold:0, rootMargin:'-40% 0px -55% 0px'});
+    sectionEls.forEach(function(el){ secIO.observe(el); });
+  }
 
-function aheadPos(){
-  const d = DIR[mender.f];
-  return {r:mender.r+d[0], c:mender.c+d[1]};
-}
+  /* ---------- SCROLL PROGRESS + TRAVEL DOT ---------- */
+  var spinePath = document.getElementById('spinePath');
+  var travelDot = document.getElementById('travelDot');
+  var progressBar = document.getElementById('progressBar');
+  var pathLen = spinePath ? spinePath.getTotalLength() : 0;
+  var ticking = false;
 
-async function highlightLine(idx){
-  document.querySelectorAll('.pline').forEach(el=>el.classList.remove('current'));
-  const el = document.querySelector(`.pline[data-i="${idx}"]`);
-  if(el) el.classList.add('current');
-}
+  function updateScroll(){
+    var doc = document.documentElement;
+    var scrollTop = window.scrollY || doc.scrollTop;
+    var max = (doc.scrollHeight - window.innerHeight) || 1;
+    var progress = Math.min(Math.max(scrollTop / max, 0), 1);
 
-/* Build nested AST from flat token list */
-function buildAST(tokens){
-  let i=0;
-  function parseBlock(){
-    const out=[];
-    while(i<tokens.length){
-      const t=tokens[i];
-      if(t==='repeatEnd'||t==='ifElse'||t==='ifEnd'){return out;}
-      if(t==='repeatStart'){
-        i++;
-        const idxStart=i-1;
-        const children = parseBlock();
-        i++; // consume repeatEnd
-        out.push({type:'repeat',count:2,children,line:idxStart});
-      } else if(t==='ifGapStart'){
-        i++;
-        const idxStart=i-1;
-        const thenC = parseBlock();
-        let elseC=[];
-        if(tokens[i]==='ifElse'){ i++; elseC = parseBlock(); }
-        i++; // consume ifEnd
-        out.push({type:'if',thenC,elseC,line:idxStart});
-      } else {
-        out.push({type:'cmd',cmd:t,line:i});
-        i++;
+    if(spinePath && travelDot){
+      var pt = spinePath.getPointAtLength(progress * pathLen);
+      travelDot.setAttribute('cx', pt.x);
+      travelDot.setAttribute('cy', pt.y);
+    }
+    if(progressBar){
+      progressBar.style.width = (progress*100)+'%';
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', function(){
+    if(!ticking){ window.requestAnimationFrame(updateScroll); ticking = true; }
+  }, {passive:true});
+  updateScroll();
+
+  /* ---------- MOBILE OVERLAY ---------- */
+  var hamburger = document.getElementById('hamburger');
+  var overlay = document.getElementById('mobileOverlay');
+  var closeOverlay = document.getElementById('closeOverlay');
+  function openOverlay(){ overlay.classList.add('open'); }
+  function shutOverlay(){ overlay.classList.remove('open'); }
+  if(hamburger){
+    hamburger.addEventListener('click', openOverlay);
+    hamburger.addEventListener('keypress', function(e){ if(e.key==='Enter') openOverlay(); });
+  }
+  if(closeOverlay) closeOverlay.addEventListener('click', shutOverlay);
+  if(overlay){
+    overlay.addEventListener('click', function(e){
+      if(e.target.classList.contains('nav-link')){ setTimeout(shutOverlay, 250); }
+    });
+  }
+
+  /* ---------- PUZZLE TABS ---------- */
+  document.querySelectorAll('.ptab[data-cat]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.ptab[data-cat]').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      var cat = btn.dataset.cat;
+      document.querySelectorAll('.puzzle-card').forEach(function(card){
+        card.classList.toggle('show', card.dataset.cat===cat);
+      });
+    });
+  });
+
+  /* ---------- MOCKUP TABS ---------- */
+  document.querySelectorAll('.ptab[data-mock]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.ptab[data-mock]').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      var mock = btn.dataset.mock;
+      document.querySelectorAll('.mockup-frame').forEach(function(frame){
+        frame.classList.toggle('show', frame.dataset.mock===mock);
+      });
+    });
+  });
+
+  /* ---------- BOSS CARD TAP-TO-FLIP (touch devices) ---------- */
+  document.querySelectorAll('.boss-card').forEach(function(card){
+    card.addEventListener('click', function(){
+      if(window.matchMedia('(hover: none)').matches){
+        card.classList.toggle('flipped');
       }
-    }
-    return out;
-  }
-  return parseBlock();
-}
+    });
+  });
 
-let execFailed=false, execMsg='';
-
-async function execNode(node){
-  if(execFailed) return;
-  await highlightLine(node.line);
-  await sleep(420);
-  if(node.type==='cmd'){
-    await execCmd(node.cmd);
-  } else if(node.type==='repeat'){
-    for(let k=0;k<node.count && !execFailed;k++){
-      for(const child of node.children){ await execNode(child); if(execFailed) return; }
-    }
-  } else if(node.type==='if'){
-    const gapAhead = gridChar(aheadPos().r, aheadPos().c)==='G';
-    const branch = gapAhead?node.thenC:node.elseC;
-    for(const child of branch){ await execNode(child); if(execFailed) return; }
-  }
-}
-
-async function execCmd(cmd){
-  const lv = levels[curLevel];
-  if(cmd==='turnLeft'){ mender.f = TURN_L[mender.f]; renderGrid(); return; }
-  if(cmd==='turnRight'){ mender.f = TURN_R[mender.f]; renderGrid(); return; }
-  if(cmd==='forward'){
-    const p = aheadPos();
-    const ch = gridChar(p.r,p.c);
-    if(ch==='#'){ execFailed=true; execMsg='wall'; return; }
-    if(ch==='G'){ execFailed=true; execMsg='gap'; return; }
-    mender.r=p.r; mender.c=p.c; renderGrid();
-    return;
-  }
-  if(cmd==='jump'){
-    const d = DIR[mender.f];
-    const mid = {r:mender.r+d[0], c:mender.c+d[1]};
-    const land = {r:mender.r+d[0]*2, c:mender.c+d[1]*2};
-    if(gridChar(mid.r,mid.c)!=='G'){ /* jumping when no gap: just acts like forward x2 attempt, but we'll treat as fail if lands on wall */ }
-    const landCh = gridChar(land.r,land.c);
-    if(landCh==='#'){ execFailed=true; execMsg='wall'; return; }
-    mender.r=land.r; mender.c=land.c; renderGrid();
-    return;
-  }
-  if(cmd==='collect'){
-    const key = mender.r+','+mender.c;
-    if(gridChar(mender.r,mender.c)==='*' && !collected.has(key)){
-      collected.add(key);
-    }
-    renderGrid();
-    return;
-  }
-  if(cmd==='callActivate'){
-    const key = mender.r+','+mender.c;
-    if(gridChar(mender.r,mender.c)==='*' && !collected.has(key)){
-      collected.add(key);
-      sparks++;
-      renderSparkRow();
-    }
-    renderGrid();
-    return;
-  }
-}
-
-async function runProgram(){
-  if(running) return;
-  running=true;
-  $('runBtn').disabled=true;
-  execFailed=false; execMsg='';
-  const lv = levels[curLevel];
-  mender = {r:lv.start.r,c:lv.start.c,f:lv.start.f};
-  collected = new Set();
-  sparks=0;
-  renderGrid(); renderSparkRow();
-  await sleep(200);
-
-  const ast = buildAST(program);
-  for(const node of ast){
-    await execNode(node);
-    if(execFailed) break;
-  }
-  document.querySelectorAll('.pline').forEach(el=>el.classList.remove('current'));
-
-  if(!execFailed){
-    const onDoor = gridChar(mender.r,mender.c)==='D';
-    const sparkOK = !lv.sparksNeeded || sparks>=lv.sparksNeeded;
-    if(onDoor && sparkOK){
-      $('storyText').innerHTML = `<span class="concept-tag">${lv.concept}</span>` + lv.success;
-      $('nextWrap').style.display='block';
-      levelComplete=true;
-      updateGearRing();
-      $('hint').textContent='';
-    } else if(onDoor && !sparkOK){
-      $('storyText').innerHTML = `<span class="concept-tag">${lv.concept}</span>` + lv.fail;
-      $('hint').textContent = `The door needs ${lv.sparksNeeded} sparks. You arrived with ${sparks}.`;
-    } else {
-      $('storyText').innerHTML = `<span class="concept-tag">${lv.concept}</span><p class="fail">The program ends, but the Mender hasn't reached the door yet. Add more commands, or rethink the plan.</p>`;
-    }
-  } else {
-    $('storyText').innerHTML = `<span class="concept-tag">${lv.concept}</span>` + lv.fail;
-    $('hint').textContent = execMsg==='wall' ? 'The Mender hit a wall — check your turns and counts.' : 'The Mender fell into a gap — check your conditional logic.';
-  }
-
-  running=false;
-  $('runBtn').disabled=false;
-}
-
-function nextLevel(){
-  if(curLevel < levels.length-1){
-    loadLevel(curLevel+1);
-  } else {
-    $('gameArea').innerHTML = `<div class="intro-card"><p class="success" style="font-size:18px;">You have mended every district of Gearford. The Engine hums quietly beneath the city once more &mdash; sequencing, looping, choosing, remembering. <em>Well done, Mender.</em></p></div>`;
-  }
-}
+})();
 </script>
 </body>
 </html>
